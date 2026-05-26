@@ -31,7 +31,7 @@
         [data-theme="light"] {
             --navy:   #faf8f4; --deep:   #f3f1ec; --blue:   #e8e4de; --accent: #1a1a1a;
             --red:    #8a3020; --green:  #1e5a34; --white:  #1a1a1a; --gray:   #6e6b66;
-            --light:  #2c2925; --card:   #ffffff; --border: rgba(0,0,0,0.15);
+            --light:  --light:  #2c2925; --card:   #ffffff; --border: rgba(0,0,0,0.15);
             --hero-grid: rgba(26,26,26,0.04); --hero-glow: rgba(26,26,26,0.03);
             --module-hover: #f3f1ec; --btn-text: #ffffff;
         }
@@ -345,7 +345,7 @@
                 const isInterrupted = ref(false);
                 const isCheated = ref(false);
 
-                // Normalisation logicielle stricte pour écraser accents, espaces et casses
+                // Normalisation logicielle des chaînes (suppression systématique des accents/espaces)
                 const cleanText = (t) => {
                     return String(t).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 };
@@ -374,14 +374,15 @@
                         .then(data => {
                             const arr = Array.isArray(data) ? data : [];
                             rawDatabase.value = arr.map(q => {
-                                // STRATÉGIE RADICALE : On va chercher la première propriété déclarée de l'objet
-                                // Peu importe son nom (Niveau, niveau, N°, etc.), puisque vous l'avez mise en PREMIER.
-                                const keys = Object.keys(q);
-                                let extractedLevel = 'Seconde';
-                                if (keys.length > 0) {
-                                    extractedLevel = String(q[keys]).replace(/[\r\n]/g, '').trim();
+                                // CIBLAGE DIRECT : On cherche la clé exacte "Niveau" ou "niveau" déclarée par Excel
+                                let levelFound = 'Seconde';
+                                for (let key in q) {
+                                    if (key.trim().toLowerCase() === 'niveau') {
+                                        levelFound = String(q[key]).replace(/[\r\n]/g, '').trim();
+                                        break;
+                                    }
                                 }
-                                q.Niveau = extractedLevel;
+                                q.Niveau = levelFound;
                                 return q;
                             });
                         })
@@ -413,7 +414,7 @@
                         } else if (target === 'premiere') {
                             return currentQLevel === 'seconde' || currentQLevel === 'premiere';
                         } else if (target === 'terminale') {
-                            return true; 
+                            return true; // Donne accès à la totalité (Seconde + Première + Terminale)
                         }
                         return true;
                     });
@@ -430,7 +431,6 @@
                     const tree = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
-                        // Extraction tolérante pour la colonne sous-module
                         const sm = q["Sous module"] || q["Sousmodule"] || q["Sous-module"] || "Tronc Commun";
                         if (!tree[m]) tree[m] = {};
                         if (!tree[m][sm]) tree[m][sm] = [];

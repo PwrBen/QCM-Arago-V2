@@ -392,11 +392,19 @@
                         .then(data => {
                             const base = Array.isArray(data) ? data : [];
                             rawDatabase.value = base.map(q => {
-                                if (q.Niveau || q.niveau) {
-                                    const rawN = q.Niveau || q.niveau;
+                                // Extraction ULTRA ROBUSTE du niveau (cherche 'Niveau', 'niveau', 'NIVEAU' ou 'Niveau\r')
+                                let rawN = '';
+                                for (let key in q) {
+                                    if (key.toLowerCase().trim() === 'niveau') {
+                                        rawN = q[key];
+                                        break;
+                                    }
+                                }
+                                
+                                if (rawN) {
                                     q.Niveau = String(rawN).replace(/[\r\n]/g, '').trim();
                                 } else {
-                                    q.Niveau = 'Seconde'; // Par défaut si absent
+                                    q.Niveau = 'Seconde'; // Secours par défaut si la clé n'est pas lue
                                 }
                                 return q;
                             });
@@ -432,17 +440,21 @@
                 };
 
                 const selectLevel = (level) => {
-                    selectedLevel.value = level;
+                    selectedLevel.value = level.toLowerCase().trim();
 
                     filteredQuestions.value = rawDatabase.value.filter(q => {
-                        const qNiveau = q.Niveau.toLowerCase().trim();
+                        if (!q.Niveau) return false;
                         
-                        if (level === 'seconde') {
+                        // Nettoyage complet avant comparaison pour écraser majuscules/minuscules et accents
+                        const qNiveau = q.Niveau.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        const targetLevel = selectedLevel.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        
+                        if (targetLevel === 'seconde') {
                             return qNiveau === 'seconde';
-                        } else if (level === 'premiere') {
-                            return qNiveau === 'seconde' || qNiveau === 'première' || qNiveau === 'premiere';
-                        } else if (level === 'terminale') {
-                            return true; 
+                        } else if (targetLevel === 'premiere') {
+                            return qNiveau === 'seconde' || qNiveau === 'premiere';
+                        } else if (targetLevel === 'terminale') {
+                            return true; // Donne accès à tout (Seconde, Première, Terminale)
                         }
                         return true;
                     });
@@ -459,8 +471,6 @@
                     const structure = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
-                        
-                        // Détection blindée de la clé sous-module quelle que soit son écriture dans le JSON
                         const sm = q["Sous module"] || q["Sousmodule"] || q["Sous-module"] || q["sousmodule"] || "Tronc Commun";
                         
                         if (!structure[m]) structure[m] = {};

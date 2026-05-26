@@ -63,7 +63,6 @@
         .panel-header-tactical { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
         .panel-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
         
-        /* Grilles adaptatives */
         .class-grid, .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
         @media(max-width: 640px) { .class-grid, .mode-grid { grid-template-columns: 1fr; } }
         
@@ -217,15 +216,19 @@
                 <div class="section-tag">Parcours ciblés — {{ currentClass }}</div>
                 <h2 class="page-title">UNITÉS DE <em>FORMATION</em></h2>
 
-                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                <div v-if="questionDatabase.length === 0" class="panel" style="border-color: var(--red); background: rgba(192, 57, 43, 0.05); text-align: center;">
+                    <p style="color: var(--red); font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Base de données indisponible. Vérifiez la présence du fichier 'BDD-QCM.json' dans votre dépôt GitHub.</p>
+                </div>
+
+                <div v-else style="display: flex; flex-direction: column; gap: 2rem;">
                     <div class="panel">
                         <div class="card-num"><i class="fas fa-user-shield"></i> MODULE 01</div>
-                        <div class="card-name">Sûreté Publique & Privée <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('surete') }} questions de référence)</span></div>
+                        <div class="card-name">Sûreté Publique & Privée <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('surete') }} questions)</span></div>
                         <div class="sub-modules-vertical-stack">
                             <div v-for="sub in syllabusData.surete" :key="sub.id" class="sub-module-row-item">
                                 <div class="sub-module-meta-line">
                                     <div class="sub-module-label-title">Sous-module {{ sub.id }} : {{ sub.title }} <span class="text-xs font-normal opacity-60" style="margin-left: 4px;">({{ fetchSubModuleQuantity('surete', sub.key) }} Q)</span></div>
-                                    <button @click="startTraining('surete', sub.key)" class="btn-sub-launch">Lancer</button>
+                                    <button @click="startTraining('surete', sub.key)" :disabled="fetchSubModuleQuantity('surete', sub.key) === 0" class="btn-sub-launch">Lancer</button>
                                 </div>
                                 <div class="sub-module-content-syllabus"><strong>Programme :</strong> {{ sub.content }}</div>
                             </div>
@@ -234,12 +237,12 @@
 
                     <div class="panel">
                         <div class="card-num" style="color: #e67e22;"><i class="fas fa-fire-extinguisher"></i> MODULE 02</div>
-                        <div class="card-name">Sécurité Incendie (SSIAP) <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('securite') }} questions de référence)</span></div>
+                        <div class="card-name">Sécurité Incendie (SSIAP) <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('securite') }} questions)</span></div>
                         <div class="sub-modules-vertical-stack">
                             <div v-for="sub in syllabusData.securite" :key="sub.id" class="sub-module-row-item">
                                 <div class="sub-module-meta-line">
                                     <div class="sub-module-label-title">Sous-module {{ sub.id }} : {{ sub.title }} <span class="text-xs font-normal opacity-60" style="margin-left: 4px;">({{ fetchSubModuleQuantity('securite', sub.key) }} Q)</span></div>
-                                    <button @click="startTraining('securite', sub.key)" class="btn-sub-launch">Lancer</button>
+                                    <button @click="startTraining('securite', sub.key)" :disabled="fetchSubModuleQuantity('securite', sub.key) === 0" class="btn-sub-launch">Lancer</button>
                                 </div>
                                 <div class="sub-module-content-syllabus"><strong>Programme :</strong> {{ sub.content }}</div>
                             </div>
@@ -248,12 +251,12 @@
 
                     <div class="panel">
                         <div class="card-num" style="color: var(--red);"><i class="fas fa-heartbeat"></i> MODULE 03</div>
-                        <div class="card-name">Secourisme Opérationnel <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('secourisme') }} questions de référence)</span></div>
+                        <div class="card-name">Secourisme Opérationnel <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('secourisme') }} questions)</span></div>
                         <div class="sub-modules-vertical-stack">
                             <div v-for="sub in syllabusData.secourisme" :key="sub.id" class="sub-module-row-item">
                                 <div class="sub-module-meta-line">
                                     <div class="sub-module-label-title">Sous-module {{ sub.id }} : {{ sub.title }} <span class="text-xs font-normal opacity-60" style="margin-left: 4px;">({{ fetchSubModuleQuantity('secourisme', sub.key) }} Q)</span></div>
-                                    <button @click="startTraining('secourisme', sub.key)" class="btn-sub-launch">Lancer</button>
+                                    <button @click="startTraining('secourisme', sub.key)" :disabled="fetchSubModuleQuantity('secourisme', sub.key) === 0" class="btn-sub-launch">Lancer</button>
                                 </div>
                                 <div class="sub-module-content-syllabus"><strong>Programme :</strong> {{ sub.content }}</div>
                             </div>
@@ -365,8 +368,8 @@
                 };
 
                 const questionDatabase = ref([]);
-                const currentScreen = ref('class-select'); // Écran par défaut au chargement
-                const currentClass = ref(''); // Niveau de classe mémorisé
+                const currentScreen = ref('class-select');
+                const currentClass = ref('');
                 const currentMode = ref(''); const quizQuestions = ref([]);
                 const currentIndex = ref(0); const selectedAnswer = ref(null); const lastSelection = ref(null);
                 const hasValidatedAnswer = ref(false); const finalScore = ref(0); const examTimer = ref(0);
@@ -385,8 +388,12 @@
                     });
                     window.addEventListener('blur', triggerAntiCheatLock);
 
+                    // CHARGEMENT DIRECT DU FICHIER JSON EXTERNE
                     fetch('BDD-QCM.json')
-                        .then(res => res.json())
+                        .then(res => {
+                            if (!res.ok) throw new Error("Impossible de lire le fichier JSON");
+                            return res.json();
+                        })
                         .then(rawData => {
                             questionDatabase.value = rawData.map(row => {
                                 let moduleClean = 'securite';
@@ -437,7 +444,7 @@
                                 };
                             });
                         })
-                        .catch(err => console.error("Erreur de chargement du fichier JSON :", err));
+                        .catch(err => console.error("Erreur de chargement de la base de données JSON :", err));
                 });
 
                 function triggerAntiCheatLock() {
@@ -488,20 +495,9 @@
                     return arr;
                 }
 
-                // MÉTHODES DE NAVIGATION DES NIVEAUX DE CLASSE
                 function selectClass(className) {
                     currentClass.value = className;
                     currentScreen.value = 'home';
-                }
-
-                function backToClassSelect() {
-                    currentScreen.value = 'class-select';
-                }
-
-                function selectMode(mode) {
-                    currentMode.value = mode;
-                    if (mode === 'training') currentScreen.value = 'modules';
-                    else if (mode === 'exam') currentScreen.value = 'exam-setup';
                 }
 
                 document.addEventListener('keydown', (e) => {
@@ -511,6 +507,13 @@
                         }
                     }
                 });
+
+                function backToClassSelect() { currentScreen.value = 'class-select'; }
+                function selectMode(mode) {
+                    currentMode.value = mode;
+                    if (mode === 'training') currentScreen.value = 'modules';
+                    else if (mode === 'exam') currentScreen.value = 'exam-setup';
+                }
 
                 function backToHome() { clearInterval(timerRef.value); currentScreen.value = 'home'; }
                 function resetToHome() { currentScreen.value = 'home'; }
@@ -532,6 +535,10 @@
                     let poolSecourisme = questionDatabase.value.filter(q => q.module === 'secourisme');
                     let poolSurete = questionDatabase.value.filter(q => q.module === 'surete');
                     let poolSecurite = questionDatabase.value.filter(q => q.module === 'securite');
+
+                    if (poolSecourisme.length === 0 && poolSurete.length === 0 && poolSecurite.length === 0) {
+                        return alert("Erreur : La base de données de questions est vide.");
+                    }
 
                     triggerFisherYates(poolSecourisme);
                     triggerFisherYates(poolSurete);
@@ -645,12 +652,11 @@
                         bodyPayload += `Décision : ${entry.userChoice.texte} (${entry.userChoice.correct ? 'CONFORME' : 'NON CONFORME'})\n\n`;
                     });
 
-                    // Inclusion de la classe dans l'objet du courriel
                     window.location.href = `mailto:benoit.dol@monlycee.net?subject=Examen Securite [${encodeURIComponent(currentClass.value)}] - ${encodeURIComponent(studentIdentity)}&body=${encodeURIComponent(bodyPayload)}`;
                 }
 
                 return {
-                    syllabusData, currentScreen, currentClass, currentMode, quizQuestions, currentIndex, selectedAnswer, hasValidatedAnswer, lastSelection, finalScore, examTimer, isDarkMode, isInterrupted,
+                    syllabusData, questionDatabase, currentScreen, currentClass, currentMode, quizQuestions, currentIndex, selectedAnswer, hasValidatedAnswer, lastSelection, finalScore, examTimer, isDarkMode, isInterrupted,
                     isCheated, currentQuestion, isFinalQuestion, quizProgressPercentage, totalSessionQuestions, checkScoreColor, fetchGradeMention, missedQuestionsReview,
                     selectClass, backToClassSelect, selectMode, backToHome, resetToHome, toggleTheme, startTraining, pickAnswer, commitTrainingAnswer, forwardQuestion, abortQuiz, fetchAnswerStyling, timeFormatter, dispatchInstructorEmail, fetchSubModuleQuantity, fetchModuleQuantity, executeExamSetup
                 };

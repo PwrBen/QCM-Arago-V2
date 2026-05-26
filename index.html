@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script>
+        // Gestion immédiate du thème pour éviter le flash blanc
         (function(){
             var s = localStorage.getItem("arago-theme");
             var p = window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches;
@@ -170,17 +171,17 @@
                     <div class="interactive-card" @click="selectLevel('seconde')">
                         <div class="card-num">BAC PRO 1 ÉRE ANNÉE</div>
                         <div class="card-name">Seconde</div>
-                        <div class="card-desc">Accès restrictif aux questions de niveau Seconde uniquement.</div>
+                        <div class="card-desc">Accès exclusif aux questions de niveau Seconde uniquement.</div>
                     </div>
                     <div class="interactive-card" @click="selectLevel('premiere')">
                         <div class="card-num">BAC PRO 2 ÉME ANNÉE</div>
                         <div class="card-name">Première</div>
-                        <div class="card-desc">Accès étendu : regroupe le programme de Seconde et les notions de Première.</div>
+                        <div class="card-desc">Accès cumulatif : regroupe le programme de Seconde et de Première.</div>
                     </div>
                     <div class="interactive-card" @click="selectLevel('terminale')" style="grid-column: span 2;">
                         <div class="card-num">CYCLE COMPLET / BTS</div>
                         <div class="card-name">Terminale</div>
-                        <div class="card-desc">Accès total à l'ensemble de la base de données (Seconde, Première, Terminale).</div>
+                        <div class="card-desc">Accès général : Débloque l'intégralité des questions de la base.</div>
                     </div>
                 </div>
             </div>
@@ -199,11 +200,6 @@
                             <span style="font-family: 'Barlow Condensed'; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; opacity: 0.9;"><i class="fas fa-clock"></i> {{ qSize }} MIN</span>
                         </button>
                     </div>
-                    <div class="conseil-pro" style="text-align: left; border-left-color: var(--accent);">
-                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> <strong>Filtre Niveau :</strong> Seules les questions correspondant à la sélection de niveau sont injectées.</p>
-                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-clock"></i> <strong>Chronomètre :</strong> Vous disposez de 1 minute maximum par question.</p>
-                        <p style="color: var(--red); font-weight: 500; margin-top: 0.8rem;"><i class="fas fa-user-lock"></i> <strong>Sécurité anti-triche :</strong> Tout changement d'onglet verrouille l'épreuve.</p>
-                    </div>
                 </div>
             </div>
 
@@ -216,7 +212,7 @@
                     <div class="panel" v-for="(subModules, moduleName) in syllabusData" :key="moduleName">
                         <div class="card-num"><i class="fas fa-user-shield"></i> {{ moduleName.toUpperCase() }}</div>
                         <div class="card-name">Filière Métiers de la Sécurité</div>
-                        <div class="card-desc">Sélectionnez un sous-module éligible pour débuter.</div>
+                        <div class="card-desc">Sélectionnez un sous-module pour débuter l'évaluation.</div>
                         
                         <div class="sub-modules-vertical-stack">
                             <div class="sub-module-row-item" v-for="(questions, subName) in subModules" :key="subName">
@@ -231,7 +227,7 @@
                     </div>
                     <div v-if="Object.keys(syllabusData).length === 0" class="panel" style="text-align:center; padding: 3rem;">
                         <i class="fas fa-folder-open" style="font-size: 2rem; color: var(--gray); margin-bottom: 1rem;"></i>
-                        <p>Aucune question n'est disponible pour ce niveau avec la base actuelle.</p>
+                        <p>Aucune question disponible pour ce niveau.</p>
                     </div>
                 </div>
             </div>
@@ -253,7 +249,7 @@
 
                     <div v-if="currentQuestion">
                         <span class="chip-module">{{ currentQuestion.Module }}</span>
-                        <span v-if="currentQuestion.Niveau" class="chip-level">{{ currentQuestion.Niveau }}</span>
+                        <span class="chip-level" style="background: rgba(30,91,220,0.15); border-color: var(--accent); color: var(--white);">{{ currentQuestion.Niveau }}</span>
                         <h3 class="question-text">{{ currentQuestion.Question }}</h3>
 
                         <div class="answers-stack">
@@ -272,7 +268,7 @@
                             <p style="font-weight: 400; font-size: 0.95rem; margin-bottom: 0.5rem;">{{ currentQuestion.Justification }}</p>
                             
                             <div v-if="!lastSelection.correct && lastSelection.explication" class="conseil-pro" style="border-left-color: var(--red);">
-                                <strong>Rappel :</strong> {{ lastSelection.explication }}
+                                <strong>Rappel de cours :</strong> {{ lastSelection.explication }}
                             </div>
                         </div>
 
@@ -292,7 +288,7 @@
 
                 <div class="panel" style="text-align: center;">
                     <div v-if="isInterrupted || isCheated" class="interruption-badge">
-                        <i class="fas fa-lock"></i> Épreuve verrouillée par l'instructeur {{ isCheated ? '(Perte de focus)' : '(Abandon)' }}
+                        <i class="fas fa-lock"></i> Session Verrouillée {{ isCheated ? '(Perte de focus)' : '(Abandon)' }}
                     </div>
                     
                     <div class="card-num" :style="{ color: checkScoreColor }">Note globale validée</div>
@@ -300,7 +296,6 @@
                     <div class="mention-text">{{ fetchGradeMention() }}</div>
 
                     <div v-if="currentMode === 'exam'" style="margin: 2rem 0;">
-                        <p style="font-size: 0.95rem; color: var(--gray); margin-bottom: 1rem;">Pour officialiser ce score auprès de votre enseignant, cliquez ci-dessous :</p>
                         <button @click="dispatchInstructorEmail" class="btn-arago"><i class="fas fa-paper-plane"></i> Transmettre le rapport par mail</button>
                     </div>
 
@@ -308,25 +303,19 @@
                 </div>
 
                 <div class="panel" v-if="missedQuestionsReview.length > 0">
-                    <div class="panel-title" style="margin-bottom: 1.5rem; color: var(--red);"><i class="fas fa-history"></i> Analyse des points de vigilance</div>
+                    <div class="panel-title" style="margin-bottom: 1.5rem; color: var(--red);"><i class="fas fa-history"></i> Points de vigilance à revoir</div>
                     <div class="error-review-item" v-for="(item, index) in missedQuestionsReview" :key="index">
                         <div class="review-q">Q: {{ item.q.Question }}</div>
-                        <p style="font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--gray);">
-                            Votre réponse : <span style="color: var(--red); font-weight: 500;">{{ item.userChoice.texte }}</span>
-                        </p>
-                        <p style="font-size: 0.9rem; margin-bottom: 0.6rem; color: var(--green);">
-                            Réponse réglementaire : <strong>{{ item.q['✅ BONNE RÉPONSE'] }}</strong>
-                        </p>
-                        <div class="conseil-pro" style="border-left-color: var(--accent); margin-top: 0.5rem; font-size: 0.88rem;">
-                            <strong>Justification :</strong> {{ item.q.Justification }}
-                        </div>
+                        <p style="font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--gray);">Votre choix : <span style="color: var(--red);">{{ item.userChoice.texte }}</span></p>
+                        <p style="font-size: 0.9rem; margin-bottom: 0.6rem; color: var(--green);">Réponse attendue : <strong>{{ item.q['✅ BONNE RÉPONSE'] }}</strong></p>
+                        <div class="conseil-pro" style="border-left-color: var(--accent);"><strong>Analyse :</strong> {{ item.q.Justification }}</div>
                     </div>
                 </div>
             </div>
         </main>
 
         <footer>
-            Lycée François Arago — Unité d'Enseignement Métiers de la Sécurité & Sûreté Opérationnelle — <strong>2026</strong>
+            Lycée François Arago — Unité d'Enseignement Métiers de la Sécurité — <strong>2026</strong>
         </footer>
     </div>
 
@@ -335,14 +324,17 @@
 
         createApp({
             setup() {
+                // États de navigation principale
                 const currentScreen = ref('home'); 
                 const currentMode = ref(''); 
                 const selectedLevel = ref(''); 
                 
+                // Données structurées
                 const rawDatabase = ref([]);
                 const filteredQuestions = ref([]);
                 const syllabusData = ref({});
 
+                // États d'évaluation actifs
                 const quizQuestions = ref([]);
                 const currentIndex = ref(0);
                 const selectedAnswer = ref(null);
@@ -351,11 +343,17 @@
                 const operationalLog = ref([]);
                 const finalScore = ref(0);
 
+                // Modules de surveillance
                 const examTimer = ref(0);
                 const timerIdentifier = ref(null);
                 const isDarkMode = ref(true);
                 const isInterrupted = ref(false);
                 const isCheated = ref(false);
+
+                // Fonction utilitaire pour ôter les accents de manière logicielle
+                const cleanText = (t) => {
+                    return String(t).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                };
 
                 const selectedLevelLabel = computed(() => {
                     if (selectedLevel.value === 'seconde') return 'Seconde';
@@ -365,51 +363,36 @@
                 });
 
                 const totalAvailableQuestions = computed(() => filteredQuestions.value.length);
-
-                const currentQuestion = computed(() => {
-                    if (quizQuestions.value.length > 0 && currentIndex.value < quizQuestions.value.length) {
-                        return quizQuestions.value[currentIndex.value];
-                    }
-                    return null;
-                });
-
+                const currentQuestion = computed(() => (quizQuestions.value.length > 0 ? quizQuestions.value[currentIndex.value] : null));
                 const isFinalQuestion = computed(() => currentIndex.value === quizQuestions.value.length - 1);
                 const quizProgressPercentage = computed(() => (quizQuestions.value.length > 0 ? (currentIndex.value / quizQuestions.value.length) * 100 : 0));
+                const missedQuestionsReview = computed(() => operationalLog.value.filter(l => !l.userChoice.correct));
 
                 const checkScoreColor = computed(() => {
                     if (quizQuestions.value.length === 0) return 'var(--white)';
-                    const ratio = finalScore.value / quizQuestions.value.length;
-                    if (ratio >= 0.8) return 'var(--green)';
-                    if (ratio >= 0.5) return '#f39c12';
-                    return 'var(--red)';
+                    return (finalScore.value / quizQuestions.value.length) >= 0.7 ? 'var(--green)' : 'var(--red)';
                 });
 
-                const missedQuestionsReview = computed(() => operationalLog.value.filter(log => !log.userChoice.correct));
-
+                // Récupération asynchrone sécurisée de la BDD
                 onMounted(() => {
                     fetch('BDD-QCM.json')
                         .then(res => res.json())
                         .then(data => {
-                            const base = Array.isArray(data) ? data : [];
-                            rawDatabase.value = base.map(q => {
-                                // Extraction ULTRA ROBUSTE du niveau (cherche 'Niveau', 'niveau', 'NIVEAU' ou 'Niveau\r')
-                                let rawN = '';
+                            const arr = Array.isArray(data) ? data : [];
+                            rawDatabase.value = arr.map(q => {
+                                // Extraction adaptative de la clé Niveau
+                                let extractedLevel = 'Seconde';
                                 for (let key in q) {
                                     if (key.toLowerCase().trim() === 'niveau') {
-                                        rawN = q[key];
+                                        extractedLevel = String(q[key]).replace(/[\r\n]/g, '').trim();
                                         break;
                                     }
                                 }
-                                
-                                if (rawN) {
-                                    q.Niveau = String(rawN).replace(/[\r\n]/g, '').trim();
-                                } else {
-                                    q.Niveau = 'Seconde'; // Secours par défaut si la clé n'est pas lue
-                                }
+                                q.Niveau = extractedLevel;
                                 return q;
                             });
                         })
-                        .catch(err => console.error("Erreur d'approvisionnement JSON :", err));
+                        .catch(err => console.error("Échec d'accès au fichier JSON :", err));
 
                     window.addEventListener('blur', handleSecurityWatch);
                 });
@@ -419,19 +402,6 @@
                     clearInterval(timerIdentifier.value);
                 });
 
-                const toggleTheme = () => {
-                    const html = document.documentElement;
-                    if(html.getAttribute("data-theme") === "dark"){
-                        html.setAttribute("data-theme", "light");
-                        isDarkMode.value = false;
-                        localStorage.setItem("arago-theme", "light");
-                    } else {
-                        html.setAttribute("data-theme", "dark");
-                        isDarkMode.value = true;
-                        localStorage.setItem("arago-theme", "dark");
-                    }
-                };
-
                 const selectMode = (mode) => {
                     currentMode.value = mode;
                     isInterrupted.value = false;
@@ -439,22 +409,19 @@
                     currentScreen.value = 'level-setup';
                 };
 
+                // Tri croisé des questions selon l'exigence cumulée demandée
                 const selectLevel = (level) => {
-                    selectedLevel.value = level.toLowerCase().trim();
+                    selectedLevel.value = level;
+                    const target = cleanText(level);
 
                     filteredQuestions.value = rawDatabase.value.filter(q => {
-                        if (!q.Niveau) return false;
-                        
-                        // Nettoyage complet avant comparaison pour écraser majuscules/minuscules et accents
-                        const qNiveau = q.Niveau.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                        const targetLevel = selectedLevel.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                        
-                        if (targetLevel === 'seconde') {
-                            return qNiveau === 'seconde';
-                        } else if (targetLevel === 'premiere') {
-                            return qNiveau === 'seconde' || qNiveau === 'premiere';
-                        } else if (targetLevel === 'terminale') {
-                            return true; // Donne accès à tout (Seconde, Première, Terminale)
+                        const currentQLevel = cleanText(q.Niveau);
+                        if (target === 'seconde') {
+                            return currentQLevel === 'seconde';
+                        } else if (target === 'premiere') {
+                            return currentQLevel === 'seconde' || currentQLevel === 'premiere';
+                        } else if (target === 'terminale') {
+                            return true; // Accès total à l'ensemble
                         }
                         return true;
                     });
@@ -468,16 +435,15 @@
                 };
 
                 const buildTrainingSyllabus = () => {
-                    const structure = {};
+                    const tree = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
-                        const sm = q["Sous module"] || q["Sousmodule"] || q["Sous-module"] || q["sousmodule"] || "Tronc Commun";
-                        
-                        if (!structure[m]) structure[m] = {};
-                        if (!structure[m][sm]) structure[m][sm] = [];
-                        structure[m][sm].push(q);
+                        const sm = q["Sous module"] || q["Sousmodule"] || q["Sous-module"] || "Tronc Commun";
+                        if (!tree[m]) tree[m] = {};
+                        if (!tree[m][sm]) tree[m][sm] = [];
+                        tree[m][sm].push(q);
                     });
-                    syllabusData.value = structure;
+                    syllabusData.value = tree;
                 };
 
                 const startTraining = (questionsList) => {
@@ -485,32 +451,30 @@
                 };
 
                 const executeExamSetup = (targetSize) => {
-                    const modulesMap = {};
+                    const groups = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
-                        if (!modulesMap[m]) modulesMap[m] = [];
-                        modulesMap[m].push(q);
+                        if (!groups[m]) groups[m] = [];
+                        groups[m].push(q);
                     });
 
-                    const selectedPool = [];
-                    const keys = Object.keys(modulesMap);
+                    const pool = [];
+                    const keys = Object.keys(groups);
                     let counter = 0;
 
-                    keys.forEach(k => shuffleArray(modulesMap[k]));
+                    keys.forEach(k => shuffleArray(groups[k]));
 
-                    while (selectedPool.length < targetSize && selectedPool.length < filteredQuestions.value.length) {
+                    while (pool.length < targetSize && pool.length < filteredQuestions.value.length) {
                         const currentKey = keys[counter % keys.length];
-                        const pool = modulesMap[currentKey];
-                        if (pool && pool.length > 0) {
-                            selectedPool.push(pool.shift());
+                        const group = groups[currentKey];
+                        if (group && group.length > 0) {
+                            pool.push(group.shift());
                         }
                         counter++;
-                        if(keys.every(k => !modulesMap[k] || modulesMap[k].length === 0) && selectedPool.length < targetSize) {
-                            break;
-                        }
+                        if(keys.every(k => !groups[k] || groups[k].length === 0)) break;
                     }
 
-                    setupQuizArena(selectedPool, true);
+                    setupQuizArena(pool, true);
                 };
 
                 const setupQuizArena = (questions, isExam) => {
@@ -527,7 +491,6 @@
                     });
 
                     shuffleArray(quizQuestions.value);
-
                     currentIndex.value = 0;
                     selectedAnswer.value = null;
                     hasValidatedAnswer.value = false;
@@ -538,35 +501,24 @@
                         examTimer.value = quizQuestions.value.length * 60;
                         clearInterval(timerIdentifier.value);
                         timerIdentifier.value = setInterval(() => {
-                            if (examTimer.value > 0) {
-                                examTimer.value--;
-                            } else {
-                                handleQuizClosure(false);
-                            }
+                            if (examTimer.value > 0) examTimer.value--;
+                            else handleQuizClosure(false);
                         }, 1000);
                     }
-
                     currentScreen.value = 'quiz';
                 };
 
-                const pickAnswer = (answerObj) => {
+                const pickAnswer = (ans) => {
                     if (currentMode.value === 'training' && hasValidatedAnswer.value) return;
-                    selectedAnswer.value = answerObj;
+                    selectedAnswer.value = ans;
                 };
 
                 const commitTrainingAnswer = () => {
                     if (!selectedAnswer.value) return;
                     hasValidatedAnswer.value = true;
-                    lastSelection.value = {
-                        correct: selectedAnswer.value.correct,
-                        explication: selectedAnswer.value.explication
-                    };
+                    lastSelection.value = { correct: selectedAnswer.value.correct, explication: selectedAnswer.value.explication };
                     if (selectedAnswer.value.correct) finalScore.value++;
-                    
-                    operationalLog.value.push({
-                        q: currentQuestion.value,
-                        userChoice: selectedAnswer.value
-                    });
+                    operationalLog.value.push({ q: currentQuestion.value, userChoice: selectedAnswer.value });
                 };
 
                 const forwardQuestion = () => {
@@ -574,10 +526,9 @@
                         if (selectedAnswer.value && selectedAnswer.value.correct) finalScore.value++;
                         operationalLog.value.push({
                             q: currentQuestion.value,
-                            userChoice: selectedAnswer.value || { texte: 'Sans réponse', correct: false }
+                            userChoice: selectedAnswer.value || { texte: 'Non répondu', correct: false }
                         });
                     }
-
                     if (!isFinalQuestion.value) {
                         currentIndex.value++;
                         selectedAnswer.value = null;
@@ -591,7 +542,7 @@
                     clearInterval(timerIdentifier.value);
                     currentScreen.value = 'results';
                     if (completedNormally && quizQuestions.value.length > 0 && (finalScore.value / quizQuestions.value.length) >= 0.75) {
-                        triggerTacticalConfetti();
+                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
                     }
                 };
 
@@ -617,37 +568,30 @@
                 };
 
                 const fetchGradeMention = () => {
-                    if (isCheated.value) return "ÉPREUVE INVALIDÉE — INFRACTION AU PROTOCOLE ANTI-TRICHE";
-                    if (isInterrupted.value) return "RAPPORT INCOMPLET — INTERRUPTION SÉCURITÉ";
-                    if (quizQuestions.value.length === 0) return "AUCUNE DONNÉE";
-                    
-                    const ratio = finalScore.value / quizQuestions.value.length;
-                    if (ratio === 1) return "POSTURE EXCELLENTE — MAÎTRISE ABSOLUE";
-                    if (ratio >= 0.85) return "TRÈS SATISFAISANT — APTE AUX MISSIONS";
-                    if (ratio >= 0.7) return "MENTION ASSEZ BIEN — NIVEAU OPÉRATIONNEL VALIDÉ";
-                    if (ratio >= 0.5) return "SITUATION INTERMÉDIAIRE — REVOIR LES CONSIGNES";
-                    return "ALERTE SÛRETÉ — INSUFFISANT, DOSSIER À REPRENDRE";
+                    if (isCheated.value) return "SESSION INVALIDÉE — INFRACTION";
+                    if (isInterrupted.value) return "SESSION INCOMPLÈTE — ABANDON";
+                    const ratio = finalScore.value / (quizQuestions.value.length || 1);
+                    if (ratio >= 0.85) return "MAÎTRISE PARFAITE — POSTURE EXCELLENTE";
+                    if (ratio >= 0.7) return "NIVEAU OPÉRATIONNEL VALIDÉ";
+                    return "ALERTE SÛRETÉ — INSUFFISANT, À REPRENDRE";
                 };
 
                 const dispatchInstructorEmail = () => {
-                    const studentIdentity = prompt("Veuillez saisir vos NOM et PRÉNOM pour authentifier le rapport :");
-                    if (!studentIdentity) return;
-
-                    let statusLabel = isCheated.value ? 'INVALIDÉ (TRICHE)' : (isInterrupted.value ? 'INTERROMPU' : 'TERMINÉ');
-                    let bodyPayload = `INSPECTEUR / ENSEIGNANT : TRANSMISSION RAPPORT EXAMEN BLANC\n`;
-                    bodyPayload += `--------------------------------------------------\n`;
-                    bodyPayload += `Identité de l'apprenant : ${studentIdentity}\n`;
-                    bodyPayload += `Niveau académique sélectionné : ${selectedLevelLabel.value}\n`;
-                    bodyPayload += `Statut : ${statusLabel}\n`;
-                    bodyPayload += `Score validé : ${finalScore.value} / ${quizQuestions.value.length}\n`;
-                    bodyPayload += `--------------------------------------------------\n\n`;
-
-                    operationalLog.value.forEach((entry, i) => {
-                        bodyPayload += `Q${i+1}: ${entry.q.Question || 'Question sans titre'}\n`;
-                        bodyPayload += `Décision : ${entry.userChoice.texte} (${entry.userChoice.correct ? 'CONFORME' : 'NON CONFORME'})\n\n`;
+                    const sName = prompt("Saisissez vos NOM et PRÉNOM :");
+                    if (!sName) return;
+                    let body = `RAPPORT EXAMEN BLANC - LYCÉE ARAGO\nApprenant : ${sName}\nNiveau : ${selectedLevelLabel.value}\nScore : ${finalScore.value} / ${quizQuestions.value.length}\n\n`;
+                    operationalLog.value.forEach((e, i) => {
+                        body += `Q${i+1}: ${e.q.Question}\nRéponse : ${e.userChoice.texte} (${e.userChoice.correct ? 'CONFORME' : 'NON CONFORME'})\n\n`;
                     });
+                    window.location.href = `mailto:benoit.dol@monlycee.net?subject=QCM_${selectedLevelLabel.value}_${encodeURIComponent(sName)}&body=${encodeURIComponent(body)}`;
+                };
 
-                    window.location.href = `mailto:benoit.dol@monlycee.net?subject=Examen Securite (${selectedLevelLabel.value}) - ${encodeURIComponent(studentIdentity)}&body=${encodeURIComponent(bodyPayload)}`;
+                const toggleTheme = () => {
+                    const html = document.documentElement;
+                    const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                    html.setAttribute("data-theme", next);
+                    isDarkMode.value = (next === "dark");
+                    localStorage.setItem("arago-theme", next);
                 };
 
                 const backToHome = () => {
@@ -655,21 +599,15 @@
                     currentScreen.value = 'home';
                 };
 
-                const shuffleArray = (array) => {
-                    for (let i = array.length - 1; i > 0; i--) {
+                const shuffleArray = (a) => {
+                    for (let i = a.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
-                        [array[i], array[j]] = [array[j], array[i]];
+                        [a[i], a[j]] = [a[j], a[i]];
                     }
                 };
 
-                const timeFormatter = (seconds) => {
-                    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                    const s = (seconds % 60).toString().padStart(2, '0');
-                    return `${m}:${s}`;
-                };
-
-                const triggerTacticalConfetti = () => {
-                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                const timeFormatter = (s) => {
+                    return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
                 };
 
                 return {

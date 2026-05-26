@@ -31,7 +31,7 @@
         [data-theme="light"] {
             --navy:   #faf8f4; --deep:   #f3f1ec; --blue:   #e8e4de; --accent: #1a1a1a;
             --red:    #8a3020; --green:  #1e5a34; --white:  #1a1a1a; --gray:   #6e6b66;
-            --light:  --light:  #2c2925; --card:   #ffffff; --border: rgba(0,0,0,0.15);
+            --light:  #2c2925; --card:   #ffffff; --border: rgba(0,0,0,0.15);
             --hero-grid: rgba(26,26,26,0.04); --hero-glow: rgba(26,26,26,0.03);
             --module-hover: #f3f1ec; --btn-text: #ffffff;
         }
@@ -62,8 +62,11 @@
         .panel { background: var(--card); border: 1px solid var(--border); padding: 2rem; margin-bottom: 2rem; position: relative; }
         .panel-header-tactical { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
         .panel-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
-        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
-        @media(max-width: 640px) { .mode-grid { grid-template-columns: 1fr; } }
+        
+        /* Grilles adaptatives */
+        .class-grid, .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        @media(max-width: 640px) { .class-grid, .mode-grid { grid-template-columns: 1fr; } }
+        
         .interactive-card { background: var(--card); border: 1px solid var(--border); padding: 2rem; cursor: pointer; transition: all 0.25s; text-align: left; position: relative; }
         .interactive-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); transform: scaleY(0); transition: transform 0.25s; }
         .interactive-card:hover { background: var(--module-hover); transform: translateX(4px); border-color: var(--accent); }
@@ -76,6 +79,7 @@
         .sub-module-row-item:hover { border-color: var(--accent); background: var(--module-hover); }
         .sub-module-meta-line { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
         .sub-module-label-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px; color: var(--white); }
+        .sub-module-content-syllabus { font-size: 0.85rem; color: var(--gray); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(138, 154, 181, 0.15); line-height: 1.5; }
         .btn-arago { background: var(--accent); color: var(--btn-text); border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 12px 28px; cursor: pointer; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-arago:hover { filter: brightness(1.15); transform: translateY(-1px); }
         .btn-arago:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
@@ -109,12 +113,13 @@
         .review-q { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
         .chrono-badge { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--red); background: rgba(192, 57, 43, 0.1); border: 1px solid rgba(192, 57, 43, 0.25); padding: 2px 12px; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; }
         .chip-module { font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(30,91,220,0.1); border: 1px solid var(--border); color: var(--white); padding: 2px 8px; margin-bottom: 0.5rem; display: inline-block; }
-        .chip-level { font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(230, 126, 34, 0.15); border: 1px solid rgba(230, 126, 34, 0.3); color: #e67e22; padding: 2px 8px; margin-bottom: 0.5rem; display: inline-block; margin-left: 6px; }
+        
         .interruption-badge {
             font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px;
             text-transform: uppercase; background: rgba(230, 126, 34, 0.15); border: 1px solid #e67e22;
             color: #e67e22; padding: 6px 16px; margin: 1rem auto; display: inline-block;
         }
+
         footer { background: var(--deep); border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gray); }
         footer strong { color: var(--white); }
         #theme-toggle-wrap { position: fixed; bottom: 24px; left: 24px; z-index: 3001; display: flex; align-items: center; gap: 10px; }
@@ -136,16 +141,39 @@
 
         <nav>
             <div class="nav-logo">ARAGO <span>ÉVALUATION</span></div>
-            <div v-if="currentScreen === 'quiz'" class="nav-mode-badge">{{ currentMode === 'training' ? 'Entraînement' : 'Examen' }}</div>
+            <div v-if="currentScreen === 'quiz'" class="nav-mode-badge">{{ currentMode === 'training' ? 'Entraînement' : 'Examen' }} — {{ currentClass }}</div>
         </nav>
 
         <main>
-            <div class="hero-bg" v-if="currentScreen === 'home'">
+            <div class="hero-bg" v-if="currentScreen === 'class-select' || currentScreen === 'home'">
                 <div class="hero-grid"></div><div class="hero-glow"></div>
             </div>
 
+            <div v-if="currentScreen === 'class-select'">
+                <div class="section-tag">Identification du cursus</div>
+                <h2 class="page-title">SÉLECTIONNEZ VOTRE<br>NIVEAU DE <em>CLASSE</em></h2>
+                <div class="class-grid">
+                    <div class="interactive-card" @click="selectClass('Seconde')">
+                        <div class="card-num">BAC PRO 1ère ANNÉE</div>
+                        <div class="card-name">Seconde</div>
+                        <div class="card-desc">Bases de la sécurité publique, privée et fondamentaux opérationnels.</div>
+                    </div>
+                    <div class="interactive-card" @click="selectClass('Première')">
+                        <div class="card-num">BAC PRO 2ème ANNÉE</div>
+                        <div class="card-name">Première</div>
+                        <div class="card-desc">Approfondissement juridique, techniques d'intervention et SSIAP réglementaire.</div>
+                    </div>
+                    <div class="interactive-card" @click="selectClass('Terminale')">
+                        <div class="card-num">BAC PRO ANNÉE FINALE</div>
+                        <div class="card-name">Terminale</div>
+                        <div class="card-desc">Gestion de crise complète, cadre pénal de terrain et examen blanc du titre.</div>
+                    </div>
+                </div>
+            </div>
+
             <div v-if="currentScreen === 'home'">
-                <div class="section-tag">Espace Numérique</div>
+                <button @click="backToClassSelect" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Changer de niveau ({{ currentClass }})</button>
+                <div class="section-tag">Espace Numérique — {{ currentClass }}</div>
                 <h2 class="page-title">CONTRÔLE DES<br>CONNAISSANCES <em>SÉCURITÉ</em></h2>
                 <div class="mode-grid">
                     <div class="interactive-card" @click="selectMode('training')">
@@ -161,452 +189,470 @@
                 </div>
             </div>
 
-            <div v-if="currentScreen === 'level-setup'">
-                <button @click="backToHome" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Retour</button>
-                <div class="section-tag">Filiation pédagogique</div>
-                <h2 class="page-title">SÉLECTION DU <em>NIVEAU</em></h2>
-                
-                <div class="mode-grid" style="max-width: 700px; margin: 2rem auto 0 auto;">
-                    <div class="interactive-card" @click="selectLevel('seconde')">
-                        <div class="card-num">BAC PRO 1 ÉRE ANNÉE</div>
-                        <div class="card-name">Seconde</div>
-                        <div class="card-desc">Accès restrictif aux questions de niveau Seconde uniquement.</div>
-                    </div>
-                    <div class="interactive-card" @click="selectLevel('premiere')">
-                        <div class="card-num">BAC PRO 2 ÉME ANNÉE</div>
-                        <div class="card-name">Première</div>
-                        <div class="card-desc">Accès cumulatif : regroupe le programme de Seconde et de Première.</div>
-                    </div>
-                    <div class="interactive-card" @click="selectLevel('terminale')" style="grid-column: span 2;">
-                        <div class="card-num">CYCLE COMPLET / BTS</div>
-                        <div class="card-name">Terminale</div>
-                        <div class="card-desc">Accès général : Débloque l'intégralité des questions de la base.</div>
-                    </div>
-                </div>
-            </div>
-
             <div v-if="currentScreen === 'exam-setup'">
-                <button @click="currentScreen = 'level-setup'" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Changer de niveau</button>
-                <div class="section-tag">Configuration réglementaire — Niveau {{ selectedLevelLabel }}</div>
+                <button @click="backToHome" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Retour aux modes</button>
+                <div class="section-tag">Configuration réglementaire — {{ currentClass }}</div>
                 <h2 class="page-title">VOLUME DE <em>L'ÉPREUVE</em></h2>
                 
                 <div class="panel" style="max-width: 650px; margin: 0 auto; text-align: center;">
-                    <div class="card-num" style="margin-bottom: 1.5rem;"><i class="fas fa-shield-alt"></i> Sélectionnez un format ({{ totalAvailableQuestions }} questions éligibles)</div>
+                    <div class="card-num" style="margin-bottom: 1.5rem;"><i class="fas fa-shield-alt"></i> Sélectionnez un format pour lancer immédiatement l'épreuve</div>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                        <button v-for="qSize in" :key="qSize" @click="executeExamSetup(qSize)" class="btn-arago" :disabled="totalAvailableQuestions < qSize" style="display: flex; flex-direction: column; padding: 15px; justify-content: center; align-items: center; gap: 4px; height: 90px; width: 100%;">
-                            <span style="font-family: 'Bebas Neue'; font-size: 1.8rem; letter-spacing: 1px; line-height: 1;">{{ qSize }} Q</span>
-                            <span style="font-family: 'Barlow Condensed'; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; opacity: 0.9;"><i class="fas fa-clock"></i> {{ qSize }} MIN</span>
+                        <button v-for="qCount in" :key="qCount" @click="executeExamSetup(qCount)" class="btn-arago" style="display: flex; flex-direction: column; padding: 15px; justify-content: center; align-items: center; gap: 4px; height: 90px; width: 100%;">
+                            <span style="font-family: 'Bebas Neue'; font-size: 1.8rem; letter-spacing: 1px; line-height: 1;">{{ qCount }} Q</span>
+                            <span style="font-family: 'Barlow Condensed'; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; opacity: 0.9;"><i class="fas fa-clock"></i> {{ qCount }} MIN</span>
                         </button>
+                    </div>
+
+                    <div class="conseil-pro" style="text-align: left; border-left-color: var(--accent);">
+                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> <strong>Règles de protocole :</strong> Les questions sont tirées de manière aléatoire et réparties de façon équitable sur l'ensemble de vos modules.</p>
+                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-clock"></i> <strong>Chronomètre :</strong> Vous disposez de <strong>1 minute maximum par question</strong>.</p>
+                        <p style="color: var(--red); font-weight: 500; margin-top: 0.8rem;"><i class="fas fa-user-lock"></i> <strong>Sécurité anti-triche :</strong> Tout changement d'onglet, ouverture de page ou perte de focus de la fenêtre verrouillera l'épreuve et invalidera le score.</p>
                     </div>
                 </div>
             </div>
 
             <div v-if="currentScreen === 'modules'">
-                <button @click="currentScreen = 'level-setup'" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Changer de niveau</button>
-                <div class="section-tag">Parcours ciblés — Niveau {{ selectedLevelLabel }}</div>
+                <button @click="backToHome" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Retour aux modes</button>
+                <div class="section-tag">Parcours ciblés — {{ currentClass }}</div>
                 <h2 class="page-title">UNITÉS DE <em>FORMATION</em></h2>
-                
+
                 <div style="display: flex; flex-direction: column; gap: 2rem;">
-                    <div class="panel" v-for="(subModules, moduleName) in syllabusData" :key="moduleName">
-                        <div class="card-num"><i class="fas fa-user-shield"></i> {{ moduleName.toUpperCase() }}</div>
-                        <div class="card-name">Filière Métiers de la Sécurité</div>
-                        <div class="card-desc">Sélectionnez un sous-module pour débuter l'évaluation.</div>
-                        
+                    <div class="panel">
+                        <div class="card-num"><i class="fas fa-user-shield"></i> MODULE 01</div>
+                        <div class="card-name">Sûreté Publique & Privée <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('surete') }} questions de référence)</span></div>
                         <div class="sub-modules-vertical-stack">
-                            <div class="sub-module-row-item" v-for="(questions, subName) in subModules" :key="subName">
+                            <div v-for="sub in syllabusData.surete" :key="sub.id" class="sub-module-row-item">
                                 <div class="sub-module-meta-line">
-                                    <span class="sub-module-label-title">{{ subName }}</span>
-                                    <button class="btn-sub-launch" @click="startTraining(questions)">
-                                        Lancer ({{ questions.length }} Q) <i class="fas fa-chevron-right"></i>
-                                    </button>
+                                    <div class="sub-module-label-title">Sous-module {{ sub.id }} : {{ sub.title }} <span class="text-xs font-normal opacity-60" style="margin-left: 4px;">({{ fetchSubModuleQuantity('surete', sub.key) }} Q)</span></div>
+                                    <button @click="startTraining('surete', sub.key)" class="btn-sub-launch">Lancer</button>
                                 </div>
+                                <div class="sub-module-content-syllabus"><strong>Programme :</strong> {{ sub.content }}</div>
                             </div>
                         </div>
                     </div>
-                    <div v-if="Object.keys(syllabusData).length === 0" class="panel" style="text-align:center; padding: 3rem;">
-                        <i class="fas fa-folder-open" style="font-size: 2rem; color: var(--gray); margin-bottom: 1rem;"></i>
-                        <p>Aucune question disponible pour ce niveau.</p>
+
+                    <div class="panel">
+                        <div class="card-num" style="color: #e67e22;"><i class="fas fa-fire-extinguisher"></i> MODULE 02</div>
+                        <div class="card-name">Sécurité Incendie (SSIAP) <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('securite') }} questions de référence)</span></div>
+                        <div class="sub-modules-vertical-stack">
+                            <div v-for="sub in syllabusData.securite" :key="sub.id" class="sub-module-row-item">
+                                <div class="sub-module-meta-line">
+                                    <div class="sub-module-label-title">Sous-module {{ sub.id }} : {{ sub.title }} <span class="text-xs font-normal opacity-60" style="margin-left: 4px;">({{ fetchSubModuleQuantity('securite', sub.key) }} Q)</span></div>
+                                    <button @click="startTraining('securite', sub.key)" class="btn-sub-launch">Lancer</button>
+                                </div>
+                                <div class="sub-module-content-syllabus"><strong>Programme :</strong> {{ sub.content }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="card-num" style="color: var(--red);"><i class="fas fa-heartbeat"></i> MODULE 03</div>
+                        <div class="card-name">Secourisme Opérationnel <span class="text-xs tracking-normal normal-case font-normal text-gray-400" style="margin-left: 6px;">({{ fetchModuleQuantity('secourisme') }} questions de référence)</span></div>
+                        <div class="sub-modules-vertical-stack">
+                            <div v-for="sub in syllabusData.secourisme" :key="sub.id" class="sub-module-row-item">
+                                <div class="sub-module-meta-line">
+                                    <div class="sub-module-label-title">Sous-module {{ sub.id }} : {{ sub.title }} <span class="text-xs font-normal opacity-60" style="margin-left: 4px;">({{ fetchSubModuleQuantity('secourisme', sub.key) }} Q)</span></div>
+                                    <button @click="startTraining('secourisme', sub.key)" class="btn-sub-launch">Lancer</button>
+                                </div>
+                                <div class="sub-module-content-syllabus"><strong>Programme :</strong> {{ sub.content }}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div v-if="currentScreen === 'quiz'">
+                <div class="panel-header-tactical">
+                    <div class="progress-text" style="font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+                        Question {{ currentIndex + 1 }} / {{ totalSessionQuestions }}
+                    </div>
+                    <button @click="abortQuiz" class="btn-arago-ghost" style="padding: 6px 16px; font-size: 0.75rem;">Abandonner</button>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" :style="{ width: quizProgressPercentage + '%' }"></div></div>
+                    <div v-if="currentMode === 'exam'" class="chrono-badge"><i class="fas fa-clock"></i> {{ timeFormatter(examTimer) }}</div>
+                </div>
                 <div class="panel">
-                    <div class="panel-header-tactical">
-                        <span class="panel-title">Question {{ currentIndex + 1 }} / {{ quizQuestions.length }}</span>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <span v-if="currentMode === 'exam'" class="chrono-badge"><i class="fas fa-hourglass-half"></i> {{ timeFormatter(examTimer) }}</span>
-                            <button @click="abortQuiz" class="btn-arago-ghost" style="padding: 6px 16px; font-size: 0.75rem;"><i class="fas fa-times"></i> Interrompre</button>
-                        </div>
+                    <div class="chip-module">{{ currentQuestion.subModule }}</div>
+                    <h3 class="question-text">{{ currentQuestion.question }}</h3>
+                    <div class="answers-stack">
+                        <button v-for="(answer, index) in currentQuestion.scrambledAnswers" :key="index" @click="pickAnswer(answer)" :disabled="hasValidatedAnswer" class="answer-row" :class="fetchAnswerStyling(answer)">
+                            <span>{{ answer.texte }}</span>
+                            <i v-if="currentMode === 'training' && hasValidatedAnswer && answer.correct" class="fas fa-check text-green-600"></i>
+                        </button>
                     </div>
-
-                    <div class="progress-container">
-                        <div class="progress-bar-wrap"><div class="progress-bar-fill" :style="{ width: quizProgressPercentage + '%' }"></div></div>
-                        <span class="progress-text">{{ Math.round(quizProgressPercentage) }}%</span>
+                    
+                    <div v-if="currentMode === 'training' && hasValidatedAnswer" class="feedback-box" :class="lastSelection.correct ? 'box-success' : 'box-danger'">
+                        <div class="feedback-title" :class="lastSelection.correct ? 'txt-success' : 'txt-danger'">{{ lastSelection.correct ? 'Juste' : 'Faux' }}</div>
+                        <div class="conseil-pro"><strong>Note :</strong> {{ lastSelection.explication }}</div>
                     </div>
-
-                    <div v-if="currentQuestion">
-                        <span class="chip-module">{{ currentQuestion.Module }}</span>
-                        <span class="chip-level" style="background: rgba(30,91,220,0.15); border-color: var(--accent); color: var(--white);">{{ currentQuestion.Niveau }}</span>
-                        <h3 class="question-text">{{ currentQuestion.Question }}</h3>
-
-                        <div class="answers-stack">
-                            <button class="answer-row" v-for="(ans, idx) in currentQuestion.shuffleBox" :key="idx" @click="pickAnswer(ans)" :disabled="hasValidatedAnswer && currentMode === 'training'" :class="fetchAnswerStyling(ans)">
-                                <span>{{ ans.texte }}</span>
-                                <i v-if="currentMode === 'training' && hasValidatedAnswer && ans.correct" class="fas fa-check-circle" style="color: var(--green);"></i>
-                                <i v-if="currentMode === 'training' && hasValidatedAnswer && selectedAnswer === ans && !ans.correct" class="fas fa-times-circle" style="color: var(--red);"></i>
-                            </button>
-                        </div>
-
-                        <div v-if="currentMode === 'training' && hasValidatedAnswer" class="feedback-box" :class="lastSelection.correct ? 'box-success' : 'box-danger'">
-                            <div class="feedback-title" :class="lastSelection.correct ? 'txt-success' : 'txt-danger'">
-                                <i :class="lastSelection.correct ? 'fas fa-shield-check' : 'fas fa-exclamation-triangle'"></i>
-                                {{ lastSelection.correct ? 'Analyse Conforme' : 'Alerte Non Conformité' }}
-                            </div>
-                            <p style="font-weight: 400; font-size: 0.95rem; margin-bottom: 0.5rem;">{{ currentQuestion.Justification }}</p>
-                            
-                            <div v-if="!lastSelection.correct && lastSelection.explication" class="conseil-pro" style="border-left-color: var(--red);">
-                                <strong>Rappel de cours :</strong> {{ lastSelection.explication }}
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 2rem; text-align: right;">
-                            <button v-if="currentMode === 'training' && !hasValidatedAnswer" @click="commitTrainingAnswer" :disabled="!selectedAnswer" class="btn-arago">Valider l'action</button>
-                            <button v-if="currentMode === 'exam' || (currentMode === 'training' && hasValidatedAnswer)" @click="forwardQuestion" :disabled="currentMode === 'exam' && !selectedAnswer" class="btn-arago">
-                                {{ isFinalQuestion ? 'Clôturer le rapport' : 'Question suivante' }} <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button v-if="selectedAnswer && !hasValidatedAnswer && currentMode === 'training'" @click="commitTrainingAnswer" class="btn-arago">Valider</button>
+                    <button v-if="(currentMode === 'exam' && selectedAnswer) || (currentMode === 'training' && hasValidatedAnswer)" @click="forwardQuestion" class="btn-arago">
+                        {{ isFinalQuestion ? 'Éditer le bilan' : 'Question suivante' }} <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
 
-            <div v-if="currentScreen === 'results'">
-                <div class="section-tag">Clôture du dossier</div>
-                <h2 class="page-title">RÉSULTATS DE <em>L'ÉVALUATION</em></h2>
-
-                <div class="panel" style="text-align: center;">
-                    <div v-if="isInterrupted || isCheated" class="interruption-badge">
-                        <i class="fas fa-lock"></i> Session Verrouillée {{ isCheated ? '(Perte de focus)' : '(Abandon)' }}
-                    </div>
+            <div v-if="currentScreen === 'result'">
+                <div class="section-tag">Fin de mission — Bilan {{ currentClass }}</div>
+                <h2 class="page-title">COMPTE RENDU <em>D'ÉVALUATION</em></h2>
+                <div class="panel" style="text-align: center; max-width: 600px; margin: 0 auto 3rem;">
                     
-                    <div class="card-num" :style="{ color: checkScoreColor }">Note globale validée</div>
-                    <div class="score-display" :style="{ color: checkScoreColor }">{{ finalScore }} / {{ quizQuestions.length }}</div>
-                    <div class="mention-text">{{ fetchGradeMention() }}</div>
-
-                    <div v-if="currentMode === 'exam'" style="margin: 2rem 0;">
-                        <button @click="dispatchInstructorEmail" class="btn-arago"><i class="fas fa-paper-plane"></i> Transmettre le rapport par mail</button>
+                    <div v-if="isCheated" class="interruption-badge" style="background: rgba(192, 57, 43, 0.15); border-color: var(--red); color: var(--red);">
+                        <i class="fas fa-radiation-alt"></i> ALERTE FRAUDE : Sortie de page ou changement d'onglet détecté
+                    </div>
+                    <div v-else-if="isInterrupted" class="interruption-badge">
+                        <i class="fas fa-exclamation-triangle"></i> Épreuve interrompue par l'apprenant (Bilan partiel)
                     </div>
 
-                    <button @click="backToHome" class="btn-arago-ghost" style="margin-top: 1rem;"><i class="fas fa-home"></i> Retour à l'accueil</button>
+                    <div class="card-num">RÉSULTAT GLOBAL</div>
+                    <div class="score-display" :style="{ color: checkScoreColor }">{{ finalScore }} / {{ totalSessionQuestions }}</div>
+                    <div class="mention-text">{{ fetchGradeMention }}</div>
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                        <button v-if="currentMode === 'exam'" @click="dispatchInstructorEmail" class="btn-arago"><i class="fas fa-paper-plane"></i> Transmettre au professeur</button>
+                        <button @click="resetToHome" class="btn-arago-ghost">Recommencer</button>
+                    </div>
                 </div>
-
-                <div class="panel" v-if="missedQuestionsReview.length > 0">
-                    <div class="panel-title" style="margin-bottom: 1.5rem; color: var(--red);"><i class="fas fa-history"></i> Points de vigilance à revoir</div>
-                    <div class="error-review-item" v-for="(item, index) in missedQuestionsReview" :key="index">
-                        <div class="review-q">Q: {{ item.q.Question }}</div>
-                        <p style="font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--gray);">Votre choix : <span style="color: var(--red);">{{ item.userChoice.texte }}</span></p>
-                        <p style="font-size: 0.9rem; margin-bottom: 0.6rem; color: var(--green);">Réponse attendue : <strong>{{ item.q['✅ BONNE RÉPONSE'] }}</strong></p>
-                        <div class="conseil-pro" style="border-left-color: var(--accent);"><strong>Analyse :</strong> {{ item.q.Justification }}</div>
+                
+                <div class="panel">
+                    <div class="panel-title" style="margin-bottom: 1.5rem;"><i class="fas fa-chart-bar"></i> Axe d'amélioration</div>
+                    <div class="divide-y">
+                        <div v-for="(item, idx) in missedQuestionsReview" :key="idx" class="error-review-item">
+                            <div class="review-q">{{ item.question }}</div>
+                            <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">Votre réponse : <span style="text-decoration: line-through; color: var(--red); font-weight: 500;">{{ item.userChoice }}</span></div>
+                            <div style="font-size: 0.9rem; color: var(--green); font-weight: 500; margin-bottom: 0.5rem;">Doctrine exacte : {{ item.rightChoice }}</div>
+                            <div class="conseil-pro" style="margin-top: 0.5rem;"><strong>Rappel de cours :</strong> {{ item.conseil }}</div>
+                        </div>
+                        <div v-if="missedQuestionsReview.length === 0 && !isInterrupted" style="color: var(--green); font-weight: 500; text-align: center; padding: 2rem 0;"><i class="fas fa-star"></i> Zéro faute. Objectif opérationnel atteint.</div>
+                        <div v-if="isInterrupted && missedQuestionsReview.length === 0" style="color: var(--gray); font-weight: 500; text-align: center; padding: 2rem 0;"><i class="fas fa-info-circle"></i> Aucune erreur sur les questions traitées avant l'arrêt de l'épreuve.</div>
                     </div>
                 </div>
             </div>
         </main>
 
-        <footer>
-            Lycée François Arago — Unité d'Enseignement Métiers de la Sécurité — <strong>2026</strong>
-        </footer>
+        <footer><strong>Lycée François Arago</strong> · Plateforme d'Évaluation Sûreté & Sécurité · Formation Professionnelle · Tous droits réservés</footer>
     </div>
 
     <script>
-        const { createApp, ref, computed, onMounted, onBeforeUnmount } = Vue;
+        const { createApp, ref, computed, onMounted } = Vue;
 
         createApp({
             setup() {
-                const currentScreen = ref('home'); 
-                const currentMode = ref(''); 
-                const selectedLevel = ref(''); 
-                
-                const rawDatabase = ref([]);
-                const filteredQuestions = ref([]);
-                const syllabusData = ref({});
+                const syllabusData = {
+                    surete: [
+                        { id: "1.1", key: "Cadre légal, CNAPS et Déontologie", title: "Cadre légal, CNAPS et Déontologie", content: "Agrément CNAPS, moralité (B2/TAJ), Code de déontologie, secret et discrétion professionnels, port de la tenue, missions sur la voie publique." },
+                        { id: "1.2", key: "Cadre d'intervention pénal approfondi", title: "Cadre d'intervention pénal approfondi", content: "Légitime défense (personnes et biens), état de nécessité, non-assistance à personne en danger, omission d'empêcher un crime, violations, séquestration arbitraire, vol aggravé, abus de confiance, recel, dégradations, faux et usage de faux, usurpation de signes." },
+                        { id: "1.3", key: "Procédures de terrain, Flagrance & Accès", title: "Procédures de terrain, Flagrance & Accès", content: "Article 53 du CPP (flagrance), Article 73 du CPP (appréhension citoyenne), palpations de sécurité, inspections visuelles et fouilles de bagages, gestion des refus d'accès, menottage (Art. 803 CPP), contrôles du CNAPS, cas des mineurs." },
+                        { id: "1.4", key: "Gestion administrative, Vidéo & RGPD", title: "Gestion administrative, Vidéo & RGPD", content: "Rédaction et valeur de la main courante (papier et MCI), rapport circonstancié (méthode QQOQCP), gel des lieux, législation de la vidéoprotection, droits d'accès aux images, rôles du DPO, caméras piétons, levée de doute en télésurveillance, PTI/DATI géolocalisés." },
+                        { id: "1.5", key: "Gestion des crises majeures & Vigipirate", title: "Gestion des crises majeures & Vigipirate", content: "Niveaux du plan Vigipirate (Urgence Attentat), procédure colis suspect, protocole Active Shooter (Fuir, Se cacher, Alerter), confinement, coopération avec les forces d'élite (RAID/GIGN), Plan de Continuité d'Activité (PCA), Opérateurs d'Importance Vitale (OIV), alphabet radio, fausses alertes, risques NRBC-E, prise d'otage, débriefing et RETEX." }
+                    ],
+                    securite: [
+                        { id: "2.1", key: "Chimie du feu, propagation & agents d'extinction", title: "Chimie du feu, propagation & agents d'extinction", content: "Pouvoir Calorifique Supérieur (PCS/PCI), classes de feux (A, B, C, D, F), phénomènes thermiques (Flashover, Backdraft), utilisation et maintenance des extincteurs portatifs, Robinets d'Incendie Armés (RIA), modes de propagation (conduction, convection, rayonnement), toxicité des fumées, CO2 sur armoires électriques." },
+                        { id: "2.2", key: "Réglementation ERP, Dégagements & Matériaux", title: "Réglementation ERP, Dégagements & Matériaux", content: "Classement des ERP par types (M, L, N, O, R, S, U, V, W, Y) et catégories (1 à 5), calculs d'effectifs, calculs des dégagements et Unités de Passage (UP), Euroclasses de réaction au feu (A1 à F), critères de résistance au feu (R, E, EI / Stable, Pare-flamme, Coupe-feu), commissions de sécurité." },
+                        { id: "2.3", key: "Systèmes de Sécurité Incendie (SSI) & Alarmes", title: "Systèmes de Sécurité Incendie (SSI) & Alarmes", content: "Système de Détection Incendie (SDI : DA, DM, ECS), Système de Mise en Sécurité Incendie (SMSI : CMSI, DAS), types d'Équipements d'Alarme (Type 1 à Type 4), alarme restreinte, norme sonore d'évacuation (NF S 32-001), désenfumage naturel (tirage thermique) et mécanique (règles de dépression/surpression, vitesses de soufflage), zones de détection intempestives (DO vs capteurs thermiques)." },
+                        { id: "2.4", key: "Missions SSIAP, Moyens d'extinction & Évacuation", title: "Missions SSIAP, Moyens d'extinction & Évacuation", content: "Rôles et attributions du personnel SSIAP 1, SSIAP 2 et SSIAP 3, rondes de sécurité et traque des cales de portes, gestion des chantiers (Permis de feu et surveillance post-travaux), Colonnes sèches et humides (fonctionnement et tests hydrostatiques), installations de Sprinklers (ampoules thermosensibles, gong hydraulique), consignation de zones, éclairage de sécurité (évacuation vs ambiance, BAES, autonomie), plans d'évacuation, conduite de l'évacuation (Guide-file, Serre-file, point de rassemblement, recensement)." },
+                        { id: "2.5", key: "Réglementation IGH, ERP à sommeil & Crises", title: "Réglementation IGH, ERP à sommeil & Crises", content: "Seuils de hauteur IGH (28m et 50m), principe du compartimentage par niveau, classification IGH (GHW, GHO, GHU...), rôle du mandataire de sécurité, ascenseurs prioritaires pompiers, surpression des escaliers, évacuation horizontale en structures de soins ou d'hébergement dépendantes (Type U et Type J, Zone de Transfert Horizontal), alertes PPMS en milieu scolaire (Type R), rideaux de sécurité des théâtres (Type L), coupures de poing des grandes cuisines (Type N), caractéristiques des feux d'archives (Type S), plans d'intervention et de manœuvre, accueil des secours, gestion de la panique, réseau d'interphonie de sécurité, notices POSSI, Espaces d'Attente Sécurisés (EAS) pour PMR." }
+                    ],
+                    secourisme: [
+                        { id: "3.1", key: "SECOURISME (PSC)", title: "Premiers Secours Civiques (PSC)", content: "Obstructions totales et partielles des voies aériennes chez l'adulte, compressions manuelles directes des hémorragies, pose de garrot de membre (règles et heure de pose)..." },
+                        { id: "3.2", key: "SECOURISME (SST)", title: "Sauveteur Secouriste du Travail (SST)", content: "Double mission du SST, mécanisme de l'accident INRS (Danger, Situation dangereuse, Événement déclencheur, Dommage), Principes Généraux de Prévention (PGP)..." },
+                        { id: "3.3", key: "SECOURISME (PSE 1)", title: "Premiers Secours en Équipe 1 (PSE 1)", content: "Bilan d'Urgence Vitale (BUV), bilan neurologique (échelle AVPU, pupilles, anisocorie), bilan respiratoire (fréquence, amplitude, bruits)..." },
+                        { id: "3.4", key: "SECOURISME (PSE 2)", title: "Premiers Secours en Équipe 2 (PSE 2)", content: "Utilisation du Matelas Immobilisateur à Dépression (MID), pose d'attelles de membres, manipulation du Brancard Cuillère (Scoop)..." }
+                    ]
+                };
 
-                const quizQuestions = ref([]);
-                const currentIndex = ref(0);
-                const selectedAnswer = ref(null);
-                const hasValidatedAnswer = ref(false);
-                const lastSelection = ref({ correct: false, explication: '' });
-                const operationalLog = ref([]);
-                const finalScore = ref(0);
-
-                const examTimer = ref(0);
-                const timerIdentifier = ref(null);
-                const isDarkMode = ref(true);
+                const questionDatabase = ref([]);
+                const currentScreen = ref('class-select'); // Écran par défaut au chargement
+                const currentClass = ref(''); // Niveau de classe mémorisé
+                const currentMode = ref(''); const quizQuestions = ref([]);
+                const currentIndex = ref(0); const selectedAnswer = ref(null); const lastSelection = ref(null);
+                const hasValidatedAnswer = ref(false); const finalScore = ref(0); const examTimer = ref(0);
+                const timerRef = ref(null); const operationalLog = ref([]); const isDarkMode = ref(document.documentElement.getAttribute('data-theme') === 'dark');
                 const isInterrupted = ref(false);
                 const isCheated = ref(false);
 
-                // Normalisation logicielle des chaînes (suppression systématique des accents/espaces)
-                const cleanText = (t) => {
-                    return String(t).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                };
-
-                const selectedLevelLabel = computed(() => {
-                    if (selectedLevel.value === 'seconde') return 'Seconde';
-                    if (selectedLevel.value === 'premiere') return 'Première';
-                    if (selectedLevel.value === 'terminale') return 'Terminale';
-                    return '';
-                });
-
-                const totalAvailableQuestions = computed(() => filteredQuestions.value.length);
-                const currentQuestion = computed(() => (quizQuestions.value.length > 0 ? quizQuestions.value[currentIndex.value] : null));
+                const currentQuestion = computed(() => quizQuestions.value[currentIndex.value] || {});
                 const isFinalQuestion = computed(() => currentIndex.value === quizQuestions.value.length - 1);
-                const quizProgressPercentage = computed(() => (quizQuestions.value.length > 0 ? (currentIndex.value / quizQuestions.value.length) * 100 : 0));
-                const missedQuestionsReview = computed(() => operationalLog.value.filter(l => !l.userChoice.correct));
-
-                const checkScoreColor = computed(() => {
-                    if (quizQuestions.value.length === 0) return 'var(--white)';
-                    return (finalScore.value / quizQuestions.value.length) >= 0.7 ? 'var(--green)' : 'var(--red)';
-                });
+                const quizProgressPercentage = computed(() => (currentIndex.value / quizQuestions.value.length) * 100);
+                const totalSessionQuestions = computed(() => quizQuestions.value.length);
 
                 onMounted(() => {
+                    window.addEventListener('visibilitychange', () => {
+                        if (document.hidden) triggerAntiCheatLock();
+                    });
+                    window.addEventListener('blur', triggerAntiCheatLock);
+
                     fetch('BDD-QCM.json')
                         .then(res => res.json())
-                        .then(data => {
-                            const arr = Array.isArray(data) ? data : [];
-                            rawDatabase.value = arr.map(q => {
-                                // CIBLAGE DIRECT : On cherche la clé exacte "Niveau" ou "niveau" déclarée par Excel
-                                let levelFound = 'Seconde';
-                                for (let key in q) {
-                                    if (key.trim().toLowerCase() === 'niveau') {
-                                        levelFound = String(q[key]).replace(/[\r\n]/g, '').trim();
-                                        break;
-                                    }
+                        .then(rawData => {
+                            questionDatabase.value = rawData.map(row => {
+                                let moduleClean = 'securite';
+                                let m = String(row['Module'] || '').toLowerCase();
+                                if (m.includes('secourisme')) moduleClean = 'secourisme';
+                                else if (m.includes('sûreté') || m.includes('surete')) moduleClean = 'surete';
+
+                                let justificationBonne = "Option exacte. Conforme aux protocoles réglementaires.";
+                                if (row['Justification'] && String(row['Justification']).trim() !== "") justificationBonne = String(row['Justification']).trim();
+                                else if (row['Indice'] && String(row['Indice']).trim() !== "") justificationBonne = String(row['Indice']).trim();
+
+                                let reponses = [];
+                                if (row['✅ BONNE RÉPONSE']) {
+                                    reponses.push({ 
+                                        texte: String(row['✅ BONNE RÉPONSE']).trim(), 
+                                        correct: true, 
+                                        explication: justificationBonne 
+                                    });
                                 }
-                                q.Niveau = levelFound;
-                                return q;
+                                if (row['Mauvaise 1']) {
+                                    reponses.push({ 
+                                        texte: String(row['Mauvaise 1']).trim(), 
+                                        correct: false, 
+                                        explication: String(row['Explication si mauvaise 1'] || 'Option incorrecte. Erreur doctrinale.').trim() 
+                                    });
+                                }
+                                if (row['Mauvaise 2'] && String(row['Mauvaise 2']).trim() !== "") {
+                                    reponses.push({ 
+                                        texte: String(row['Mauvaise 2']).trim(), 
+                                        correct: false, 
+                                        explication: String(row['Explication si mauvaise 2'] || 'Option incorrecte. Erreur doctrinale.').trim() 
+                                    });
+                                }
+                                if (row['Mauvaise 3'] && String(row['Mauvaise 3']).trim() !== "") {
+                                    reponses.push({ 
+                                        texte: String(row['Mauvaise 3']).trim(), 
+                                        correct: false, 
+                                        explication: String(row['Explication si mauvaise 3'] || 'Option incorrecte. Erreur doctrinale.').trim() 
+                                    });
+                                }
+
+                                return {
+                                    id: row['N°'],
+                                    module: moduleClean,
+                                    subModule: String(row['Sous module'] || '').trim(),
+                                    question: String(row['Question'] || '').trim(),
+                                    reponses: reponses
+                                };
                             });
                         })
-                        .catch(err => console.error("Échec d'accès au fichier JSON :", err));
-
-                    window.addEventListener('blur', handleSecurityWatch);
+                        .catch(err => console.error("Erreur de chargement du fichier JSON :", err));
                 });
 
-                onBeforeUnmount(() => {
-                    window.removeEventListener('blur', handleSecurityWatch);
-                    clearInterval(timerIdentifier.value);
+                function triggerAntiCheatLock() {
+                    if (currentScreen.value === 'quiz' && currentMode.value === 'exam' && !isInterrupted.value) {
+                        isInterrupted.value = true;
+                        isCheated.value = true;
+                        terminateQuizSession();
+                        alert("ALERTE SÉCURITÉ : Changement de fenêtre ou d'onglet détecté. L'épreuve est immédiatement interrompue et invalidée.");
+                    }
+                }
+
+                function fetchSubModuleQuantity(moduleCode, subModuleKey) {
+                    return questionDatabase.value.filter(q => q.module === moduleCode && q.subModule === subModuleKey).length;
+                }
+
+                function fetchModuleQuantity(moduleCode) {
+                    return questionDatabase.value.filter(q => q.module === moduleCode).length;
+                }
+
+                const checkScoreColor = computed(() => {
+                    if (!quizQuestions.value.length) return 'var(--white)';
+                    if (isCheated.value) return 'var(--red)';
+                    return (finalScore.value / quizQuestions.value.length) >= 0.75 ? 'var(--green)' : 'var(--red)';
                 });
 
-                const selectMode = (mode) => {
+                const fetchGradeMention = computed(() => {
+                    if (!quizQuestions.value.length) return '';
+                    if (isCheated.value) return "🚨 TENTATIVE DE FRAUDE DÉTECTÉE — Épreuve invalidée par le système de sécurité.";
+                    if (isInterrupted.value) return "⚠️ Évaluation interrompue — Bilan partiel des connaissances acquises.";
+                    const ratio = finalScore.value / quizQuestions.value.length;
+                    if (ratio === 1) return "🥇 Rapport parfait : Compétences d'excellence validées.";
+                    if (ratio >= 0.75) return "🥈 Note réglementaire atteinte : Profil opérationnel.";
+                    return "❌ Niveau insuffisant : Révision obligatoire du code de référence.";
+                });
+
+                const missedQuestionsReview = computed(() => {
+                    return operationalLog.value.filter(e => !e.userChoice.correct).map(e => ({
+                        question: e.q.question, 
+                        userChoice: e.userChoice.texte,
+                        rightChoice: e.q.reponses.find(r => r.correct).texte, 
+                        conseil: e.userChoice.explication
+                    }));
+                });
+
+                function triggerFisherYates(arr) {
+                    let m = arr.length, t, i;
+                    while (m) { i = Math.floor(Math.random() * m--); t = arr[m]; arr[m] = arr[i]; arr[i] = t; }
+                    return arr;
+                }
+
+                // MÉTHODES DE NAVIGATION DES NIVEAUX DE CLASSE
+                function selectClass(className) {
+                    currentClass.value = className;
+                    currentScreen.value = 'home';
+                }
+
+                function backToClassSelect() {
+                    currentScreen.value = 'class-select';
+                }
+
+                function selectMode(mode) {
                     currentMode.value = mode;
+                    if (mode === 'training') currentScreen.value = 'modules';
+                    else if (mode === 'exam') currentScreen.value = 'exam-setup';
+                }
+
+                document.addEventListener('keydown', (e) => {
+                    if (currentScreen.value === 'quiz') {
+                        if (e.key === 'Backspace' || (e.key === 'ArrowLeft' && currentMode.value === 'exam')) {
+                            e.preventDefault();
+                        }
+                    }
+                });
+
+                function backToHome() { clearInterval(timerRef.value); currentScreen.value = 'home'; }
+                function resetToHome() { currentScreen.value = 'home'; }
+                
+                function toggleTheme() {
+                    let html = document.documentElement;
+                    let next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    html.setAttribute('data-theme', next); localStorage.setItem('arago-theme', next);
+                    isDarkMode.value = next === 'dark';
+                }
+
+                function startTraining(moduleCode, subModuleKey) {
+                    let filteredSet = questionDatabase.value.filter(q => q.module === moduleCode && q.subModule === subModuleKey);
+                    if(filteredSet.length === 0) return alert("Aucune question trouvée dans ce sous-module.");
+                    deployQuiz(filteredSet);
+                }
+
+                function executeExamSetup(totalQuestionsTarget) {
+                    let poolSecourisme = questionDatabase.value.filter(q => q.module === 'secourisme');
+                    let poolSurete = questionDatabase.value.filter(q => q.module === 'surete');
+                    let poolSecurite = questionDatabase.value.filter(q => q.module === 'securite');
+
+                    triggerFisherYates(poolSecourisme);
+                    triggerFisherYates(poolSurete);
+                    triggerFisherYates(poolSecurite);
+
+                    let countSurete = Math.floor(totalQuestionsTarget / 3);
+                    let countSecurite = Math.floor(totalQuestionsTarget / 3);
+                    let countSecourisme = Math.floor(totalQuestionsTarget / 3);
+                    let remainder = totalQuestionsTarget % 3;
+
+                    if (remainder > 0) { countSurete++; remainder--; }
+                    if (remainder > 0) { countSecurite++; remainder--; }
+
+                    let examPool = [
+                        ...poolSurete.slice(0, countSurete),
+                        ...poolSecurite.slice(0, countSecurite),
+                        ...poolSecourisme.slice(0, countSecourisme)
+                    ];
+
+                    triggerFisherYates(examPool);
+
+                    examTimer.value = totalQuestionsTarget * 60;
+                    timerRef.value = setInterval(() => {
+                        if (examTimer.value > 0) examTimer.value--;
+                        else terminateQuizSession();
+                    }, 1000);
+
+                    deployQuiz(examPool);
+                }
+
+                function deployQuiz(list) {
                     isInterrupted.value = false;
-                    isCheated.value = false;
-                    currentScreen.value = 'level-setup';
-                };
+                    isCheated.value = false; 
+                    quizQuestions.value = triggerFisherYates(JSON.parse(JSON.stringify(list)));
+                    quizQuestions.value.forEach(q => { q.scrambledAnswers = triggerFisherYates([...q.reponses]); });
+                    currentIndex.value = 0; finalScore.value = 0; operationalLog.value = [];
+                    clearQuestionFlags(); currentScreen.value = 'quiz';
+                }
 
-                const selectLevel = (level) => {
-                    selectedLevel.value = level;
-                    const target = cleanText(level);
-
-                    filteredQuestions.value = rawDatabase.value.filter(q => {
-                        const currentQLevel = cleanText(q.Niveau);
-                        if (target === 'seconde') {
-                            return currentQLevel === 'seconde';
-                        } else if (target === 'premiere') {
-                            return currentQLevel === 'seconde' || currentQLevel === 'premiere';
-                        } else if (target === 'terminale') {
-                            return true; // Donne accès à la totalité (Seconde + Première + Terminale)
-                        }
-                        return true;
-                    });
-
-                    if (currentMode.value === 'exam') {
-                        currentScreen.value = 'exam-setup';
-                    } else {
-                        buildTrainingSyllabus();
-                        currentScreen.value = 'modules';
-                    }
-                };
-
-                const buildTrainingSyllabus = () => {
-                    const tree = {};
-                    filteredQuestions.value.forEach(q => {
-                        const m = q.Module || "Général";
-                        const sm = q["Sous module"] || q["Sousmodule"] || q["Sous-module"] || "Tronc Commun";
-                        if (!tree[m]) tree[m] = {};
-                        if (!tree[m][sm]) tree[m][sm] = [];
-                        tree[m][sm].push(q);
-                    });
-                    syllabusData.value = tree;
-                };
-
-                const startTraining = (questionsList) => {
-                    setupQuizArena(questionsList, false);
-                };
-
-                const executeExamSetup = (targetSize) => {
-                    const groups = {};
-                    filteredQuestions.value.forEach(q => {
-                        const m = q.Module || "Général";
-                        if (!groups[m]) groups[m] = [];
-                        groups[m].push(q);
-                    });
-
-                    const pool = [];
-                    const keys = Object.keys(groups);
-                    let counter = 0;
-
-                    keys.forEach(k => shuffleArray(groups[k]));
-
-                    while (pool.length < targetSize && pool.length < filteredQuestions.value.length) {
-                        const currentKey = keys[counter % keys.length];
-                        const group = groups[currentKey];
-                        if (group && group.length > 0) {
-                            pool.push(group.shift());
-                        }
-                        counter++;
-                        if(keys.every(k => !groups[k] || groups[k].length === 0)) break;
-                    }
-
-                    setupQuizArena(pool, true);
-                };
-
-                const setupQuizArena = (questions, isExam) => {
-                    quizQuestions.value = questions.map(q => {
-                        const shuffleBox = [
-                            { texte: q['✅ BONNE RÉPONSE'], correct: true, explication: null },
-                            { texte: q['Mauvaise 1'], correct: false, explication: q['Explication si mauvaise 1'] || null },
-                            { texte: q['Mauvaise 2'], correct: false, explication: q['Explication si mauvaise 2'] || null },
-                            { texte: q['Mauvaise 3'], correct: false, explication: q['Explication si mauvaise 3'] || null }
-                        ].filter(ans => ans.texte); 
-                        
-                        shuffleArray(shuffleBox);
-                        return { ...q, shuffleBox };
-                    });
-
-                    shuffleArray(quizQuestions.value);
-                    currentIndex.value = 0;
-                    selectedAnswer.value = null;
-                    hasValidatedAnswer.value = false;
-                    operationalLog.value = [];
-                    finalScore.value = 0;
-
-                    if (isExam) {
-                        examTimer.value = quizQuestions.value.length * 60;
-                        clearInterval(timerIdentifier.value);
-                        timerIdentifier.value = setInterval(() => {
-                            if (examTimer.value > 0) examTimer.value--;
-                            else handleQuizClosure(false);
-                        }, 1000);
-                    }
-                    currentScreen.value = 'quiz';
-                };
-
-                const pickAnswer = (ans) => {
-                    if (currentMode.value === 'training' && hasValidatedAnswer.value) return;
-                    selectedAnswer.value = ans;
-                };
-
-                const commitTrainingAnswer = () => {
-                    if (!selectedAnswer.value) return;
-                    hasValidatedAnswer.value = true;
-                    lastSelection.value = { correct: selectedAnswer.value.correct, explication: selectedAnswer.value.explication };
+                function pickAnswer(ans) { if (!hasValidatedAnswer.value) selectedAnswer.value = ans; }
+                
+                function commitTrainingAnswer() {
+                    hasValidatedAnswer.value = true; lastSelection.value = selectedAnswer.value;
                     if (selectedAnswer.value.correct) finalScore.value++;
                     operationalLog.value.push({ q: currentQuestion.value, userChoice: selectedAnswer.value });
-                };
+                }
 
-                const forwardQuestion = () => {
+                function forwardQuestion() {
                     if (currentMode.value === 'exam') {
-                        if (selectedAnswer.value && selectedAnswer.value.correct) finalScore.value++;
-                        operationalLog.value.push({
-                            q: currentQuestion.value,
-                            userChoice: selectedAnswer.value || { texte: 'Non répondu', correct: false }
-                        });
+                        if (selectedAnswer.value.correct) finalScore.value++;
+                        operationalLog.value.push({ q: currentQuestion.value, userChoice: selectedAnswer.value });
                     }
-                    if (!isFinalQuestion.value) {
-                        currentIndex.value++;
-                        selectedAnswer.value = null;
-                        hasValidatedAnswer.value = false;
-                    } else {
-                        handleQuizClosure(true);
+                    if (isFinalQuestion.value) terminateQuizSession();
+                    else { currentIndex.value++; clearQuestionFlags(); }
+                }
+
+                function deleteQuestionFlags() { selectedAnswer.value = null; hasValidatedAnswer.value = false; lastSelection.value = null; }
+                function clearQuestionFlags() { deleteQuestionFlags(); }
+
+                function terminateQuizSession() { 
+                    clearInterval(timerRef.value); 
+                    currentScreen.value = 'result'; 
+                    if (!isInterrupted.value && !isCheated.value && (finalScore.value / quizQuestions.value.length) >= 0.75) {
+                        confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 } });
                     }
-                };
+                }
 
-                const handleQuizClosure = (completedNormally) => {
-                    clearInterval(timerIdentifier.value);
-                    currentScreen.value = 'results';
-                    if (completedNormally && quizQuestions.value.length > 0 && (finalScore.value / quizQuestions.value.length) >= 0.75) {
-                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                    }
-                };
+                function abortQuiz() { 
+                    if (confirm("ALERTE INTERRUPTION : Souhaitez-vous arrêter l'épreuve maintenant et générer immédiatement votre bilan de compétences ?")) {
+                        if (currentMode.value === 'training' && selectedAnswer.value && !hasValidatedAnswer.value) {
+                            commitTrainingAnswer();
+                        }
+                        isInterrupted.value = true;
+                        terminateQuizSession();
+                    } 
+                }
 
-                const abortQuiz = () => {
-                    isInterrupted.value = true;
-                    handleQuizClosure(false);
-                };
-
-                const handleSecurityWatch = () => {
-                    if (currentScreen.value === 'quiz' && currentMode.value === 'exam') {
-                        isCheated.value = true;
-                        handleQuizClosure(false);
-                    }
-                };
-
-                const fetchAnswerStyling = (ans) => {
+                function fetchAnswerStyling(ans) {
                     if (currentMode.value === 'training' && hasValidatedAnswer.value) {
                         if (ans.correct) return 'correct';
                         if (selectedAnswer.value === ans && !ans.correct) return 'wrong';
-                        return '';
+                        return 'opacity-40';
                     }
                     return selectedAnswer.value === ans ? 'selected' : '';
-                };
+                }
 
-                const fetchGradeMention = () => {
-                    if (isCheated.value) return "SESSION INVALIDÉE — INFRACTION PROTOCOLE";
-                    if (isInterrupted.value) return "SESSION INCOMPLÈTE — ABANDON";
-                    const ratio = finalScore.value / (quizQuestions.value.length || 1);
-                    if (ratio >= 0.85) return "MAÎTRISE PARFAITE — POSTURE EXCELLENTE";
-                    if (ratio >= 0.7) return "NIVEAU OPÉRATIONNEL VALIDÉ";
-                    return "ALERTE SÛRETÉ — INSUFFISANT, À REPRENDRE";
-                };
+                function timeFormatter(seconds) {
+                    const m = Math.floor(seconds / 60); const s = seconds % 60;
+                    return `${m}:${s < 10 ? '0' : ''}${s}`;
+                }
 
-                const dispatchInstructorEmail = () => {
-                    const sName = prompt("Saisissez vos NOM et PRÉNOM :");
-                    if (!sName) return;
-                    let body = `RAPPORT EXAMEN BLANC - LYCÉE ARAGO\nApprenant : ${sName}\nNiveau : ${selectedLevelLabel.value}\nScore : ${finalScore.value} / ${quizQuestions.value.length}\n\n`;
-                    operationalLog.value.forEach((e, i) => {
-                        body += `Q${i+1}: ${e.q.Question}\nRéponse : ${e.userChoice.texte} (${e.userChoice.correct ? 'CONFORME' : 'NON CONFORME'})\n\n`;
+                function dispatchInstructorEmail() {
+                    if (currentMode.value !== 'exam') return;
+                    const studentIdentity = prompt("NOM et PRÉNOM de l'élève :");
+                    if (!studentIdentity) return;
+
+                    let bodyPayload = `COMPTE RENDU EXAMEN BLANC — ARAGO SÛRETÉ\n`;
+                    bodyPayload += `Niveau d'étude : ${currentClass.value}\n`;
+                    bodyPayload += `Opérateur : ${studentIdentity}\n`;
+                    
+                    let statusLabel = 'ÉPREUVE TERMINÉE CONFORME';
+                    if (isCheated.value) statusLabel = 'INVALIDÉ - TENTATIVE DE FRAUDE DÉTECTÉE (Sortie d\'écran)';
+                    else if (isInterrupted.value) statusLabel = 'ÉPREUVE INTERROMPUE EN COURS (Abandon)';
+                    
+                    bodyPayload += `Statut : ${statusLabel}\n`;
+                    bodyPayload += `Score validé : ${finalScore.value} / ${quizQuestions.value.length}\n`;
+                    bodyPayload += `--------------------------------------------------\n\n`;
+
+                    operationalLog.value.forEach((entry, i) => {
+                        bodyPayload += `Q${i+1}: ${entry.q.question}\n`;
+                        bodyPayload += `Décision : ${entry.userChoice.texte} (${entry.userChoice.correct ? 'CONFORME' : 'NON CONFORME'})\n\n`;
                     });
-                    window.location.href = `mailto:benoit.dol@monlycee.net?subject=QCM_${selectedLevelLabel.value}_${encodeURIComponent(sName)}&body=${encodeURIComponent(body)}`;
-                };
 
-                const toggleTheme = () => {
-                    const html = document.documentElement;
-                    const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
-                    html.setAttribute("data-theme", next);
-                    isDarkMode.value = (next === "dark");
-                    localStorage.setItem("arago-theme", next);
-                };
-
-                const backToHome = () => {
-                    clearInterval(timerIdentifier.value);
-                    currentScreen.value = 'home';
-                };
-
-                const shuffleArray = (a) => {
-                    for (let i = a.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [a[i], a[j]] = [a[j], a[i]];
-                    }
-                };
-
-                const timeFormatter = (s) => {
-                    return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
-                };
+                    // Inclusion de la classe dans l'objet du courriel
+                    window.location.href = `mailto:benoit.dol@monlycee.net?subject=Examen Securite [${encodeURIComponent(currentClass.value)}] - ${encodeURIComponent(studentIdentity)}&body=${encodeURIComponent(bodyPayload)}`;
+                }
 
                 return {
-                    syllabusData, currentScreen, currentMode, quizQuestions, currentIndex, selectedAnswer, hasValidatedAnswer, lastSelection, finalScore, examTimer, isDarkMode, isInterrupted,
-                    isCheated, currentQuestion, isFinalQuestion, quizProgressPercentage, checkScoreColor, fetchGradeMention, missedQuestionsReview, selectedLevel, selectedLevelLabel, totalAvailableQuestions,
-                    selectMode, selectLevel, startTraining, backToHome, toggleTheme, pickAnswer, commitTrainingAnswer, forwardQuestion, abortQuiz, fetchAnswerStyling, timeFormatter, dispatchInstructorEmail, executeExamSetup
+                    syllabusData, currentScreen, currentClass, currentMode, quizQuestions, currentIndex, selectedAnswer, hasValidatedAnswer, lastSelection, finalScore, examTimer, isDarkMode, isInterrupted,
+                    isCheated, currentQuestion, isFinalQuestion, quizProgressPercentage, totalSessionQuestions, checkScoreColor, fetchGradeMention, missedQuestionsReview,
+                    selectClass, backToClassSelect, selectMode, backToHome, resetToHome, toggleTheme, startTraining, pickAnswer, commitTrainingAnswer, forwardQuestion, abortQuiz, fetchAnswerStyling, timeFormatter, dispatchInstructorEmail, fetchSubModuleQuantity, fetchModuleQuantity, executeExamSetup
                 };
             }
         }).mount('#app');

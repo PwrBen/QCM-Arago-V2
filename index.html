@@ -388,63 +388,25 @@
                     });
                     window.addEventListener('blur', triggerAntiCheatLock);
 
-                    // CHARGEMENT DIRECT DU FICHIER JSON EXTERNE
+                    // LECTURE DIRECTE DU FORMAT DE VOTRE FICHIER JSON
                     fetch('BDD-QCM.json')
                         .then(res => {
-                            if (!res.ok) throw new Error("Impossible de lire le fichier JSON");
+                            if (!res.ok) throw new Error("Impossible de localiser le fichier BDD-QCM.json");
                             return res.json();
                         })
                         .then(rawData => {
-                            questionDatabase.value = rawData.map(row => {
-                                let moduleClean = 'securite';
-                                let m = String(row['Module'] || '').toLowerCase();
-                                if (m.includes('secourisme')) moduleClean = 'secourisme';
-                                else if (m.includes('sûreté') || m.includes('surete')) moduleClean = 'surete';
-
-                                let justificationBonne = "Option exacte. Conforme aux protocoles réglementaires.";
-                                if (row['Justification'] && String(row['Justification']).trim() !== "") justificationBonne = String(row['Justification']).trim();
-                                else if (row['Indice'] && String(row['Indice']).trim() !== "") justificationBonne = String(row['Indice']).trim();
-
-                                let reponses = [];
-                                if (row['✅ BONNE RÉPONSE']) {
-                                    reponses.push({ 
-                                        texte: String(row['✅ BONNE RÉPONSE']).trim(), 
-                                        correct: true, 
-                                        explication: justificationBonne 
-                                    });
-                                }
-                                if (row['Mauvaise 1']) {
-                                    reponses.push({ 
-                                        texte: String(row['Mauvaise 1']).trim(), 
-                                        correct: false, 
-                                        explication: String(row['Explication si mauvaise 1'] || 'Option incorrecte. Erreur doctrinale.').trim() 
-                                    });
-                                }
-                                if (row['Mauvaise 2'] && String(row['Mauvaise 2']).trim() !== "") {
-                                    reponses.push({ 
-                                        texte: String(row['Mauvaise 2']).trim(), 
-                                        correct: false, 
-                                        explication: String(row['Explication si mauvaise 2'] || 'Option incorrecte. Erreur doctrinale.').trim() 
-                                    });
-                                }
-                                if (row['Mauvaise 3'] && String(row['Mauvaise 3']).trim() !== "") {
-                                    reponses.push({ 
-                                        texte: String(row['Mauvaise 3']).trim(), 
-                                        correct: false, 
-                                        explication: String(row['Explication si mauvaise 3'] || 'Option incorrecte. Erreur doctrinale.').trim() 
-                                    });
-                                }
-
+                            // Mapping direct et simplifié selon votre fichier JSON fourni
+                            questionDatabase.value = rawData.map(item => {
                                 return {
-                                    id: row['N°'],
-                                    module: moduleClean,
-                                    subModule: String(row['Sous module'] || '').trim(),
-                                    question: String(row['Question'] || '').trim(),
-                                    reponses: reponses
+                                    id: item.id || item.N° || Math.random(),
+                                    module: String(item.module || '').toLowerCase().trim(),
+                                    subModule: String(item.subModule || '').trim(),
+                                    question: String(item.question || '').trim(),
+                                    reponses: item.reponses || []
                                 };
                             });
                         })
-                        .catch(err => console.error("Erreur de chargement de la base de données JSON :", err));
+                        .catch(err => console.error("Erreur critique d'intégration de la BDD :", err));
                 });
 
                 function triggerAntiCheatLock() {
@@ -484,8 +446,8 @@
                     return operationalLog.value.filter(e => !e.userChoice.correct).map(e => ({
                         question: e.q.question, 
                         userChoice: e.userChoice.texte,
-                        rightChoice: e.q.reponses.find(r => r.correct).texte, 
-                        conseil: e.userChoice.explication
+                        rightChoice: (e.q.reponses.find(r => r.correct) || {texte: 'Non trouvée'}).texte, 
+                        conseil: e.userChoice.explication || "Option incorrecte. Erreur doctrinale."
                     }));
                 });
 

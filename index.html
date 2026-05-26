@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        (function(){
+            var s = localStorage.getItem("arago-theme");
+            var p = window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches;
+            if(s === "dark" || (s !== "light" && p)){
+                document.documentElement.setAttribute("data-theme","dark");
+            } else {
+                document.documentElement.setAttribute("data-theme","light");
+            }
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plateforme QCM — Lycée François Arago</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root, [data-theme="dark"] {
+            --navy:   #0a0e1a; --deep:   #0d1220; --blue:   #1a3a6e; --accent: #1e5bdc;
+            --red:    #c0392b; --green:  #27ae60; --white:  #f0f4ff; --gray:   #8a9ab5;
+            --light:  #d0daea; --card:   #111827; --border: rgba(30,91,220,0.25);
+            --hero-grid: rgba(30,91,220,0.07); --hero-glow: rgba(30,91,220,0.14);
+            --module-hover: #141d2f; --btn-text: #ffffff;
+        }
+        [data-theme="light"] {
+            --navy:   #faf8f4; --deep:   #f3f1ec; --blue:   #e8e4de; --accent: #1a1a1a;
+            --red:    #8a3020; --green:  #1e5a34; --white:  #1a1a1a; --gray:   #6e6b66;
+            --light:  #2c2925; --card:   #ffffff; --border: rgba(0,0,0,0.15);
+            --hero-grid: rgba(26,26,26,0.04); --hero-glow: rgba(26,26,26,0.03);
+            --module-hover: #f3f1ec; --btn-text: #ffffff;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--navy); color: var(--white); font-family: 'Barlow', sans-serif;
+            font-weight: 300; line-height: 1.6; overflow-x: hidden;
+            transition: background 0.3s, color 0.3s; min-height: 100vh; display: flex; flex-direction: column;
+        }
+        [data-theme="dark"] body::before {
+            content: ''; position: fixed; inset: 0; z-index: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; opacity: 0.4;
+        }
+        #app { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; position: relative; z-index: 1; }
+        nav { background: var(--navy); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+        .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 3px; color: var(--white); }
+        .nav-logo span { color: var(--accent); }
+        .nav-mode-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 3px 12px; }
+        .hero-bg { position: absolute; inset: 0; bottom: 30%; pointer-events: none; z-index: -1; overflow: hidden; }
+        .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--hero-grid) 1px, transparent 1px), linear-gradient(90deg, var(--hero-grid) 1px, transparent 1px); background-size: 50px 50px; }
+        .hero-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, var(--hero-glow) 0%, transparent 70%); top: 20%; left: 50%; transform: translate(-50%, -50%); }
+        main { flex-grow: 1; max-width: 950px; margin: 0 auto; padding: 3rem 1.5rem; width: 100%; }
+        .section-tag { font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 12px; margin-bottom: 0.5rem; }
+        .section-tag::before { content:''; display:block; width:24px; height:1px; background:var(--accent); }
+        .page-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 0.9; letter-spacing: 3px; margin-bottom: 2rem; }
+        .page-title em { font-style: normal; -webkit-text-stroke: 1px var(--accent); color: transparent; }
+        .panel { background: var(--card); border: 1px solid var(--border); padding: 2rem; margin-bottom: 2rem; position: relative; }
+        .panel-header-tactical { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+        .panel-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+        @media(max-width: 640px) { .mode-grid { grid-template-columns: 1fr; } }
+        .interactive-card { background: var(--card); border: 1px solid var(--border); padding: 2rem; cursor: pointer; transition: all 0.25s; text-align: left; position: relative; }
+        .interactive-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); transform: scaleY(0); transition: transform 0.25s; }
+        .interactive-card:hover { background: var(--module-hover); transform: translateX(4px); border-color: var(--accent); }
+        .interactive-card:hover::before { transform: scaleY(1); }
+        .card-num { font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem; letter-spacing: 2px; color: var(--accent); margin-bottom: 0.5rem; }
+        .card-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 0.5rem; }
+        .card-desc { font-size: 0.88rem; color: var(--gray); font-weight: 400; }
+        .sub-modules-vertical-stack { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.2rem; }
+        .sub-module-row-item { background: var(--deep); border: 1px solid var(--border); padding: 1rem; transition: all 0.2s; }
+        .sub-module-row-item:hover { border-color: var(--accent); background: var(--module-hover); }
+        .sub-module-meta-line { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+        .sub-module-label-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px; color: var(--white); }
+        .sub-module-content-syllabus { font-size: 0.85rem; color: var(--gray); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(138, 154, 181, 0.15); line-height: 1.5; }
+        .btn-arago { background: var(--accent); color: var(--btn-text); border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 12px 28px; cursor: pointer; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-arago:hover { filter: brightness(1.15); transform: translateY(-1px); }
+        .btn-arago:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-arago-ghost { background: transparent; color: var(--white); border: 1px solid var(--border); font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 11px 28px; cursor: pointer; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-arago-ghost:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-sub-launch { background: var(--accent); color: #fff; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 6px 16px; cursor: pointer; clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%); transition: all 0.15s; }
+        .btn-sub-launch:hover { filter: brightness(1.2); }
+        .progress-container { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+        .progress-bar-wrap { flex-grow: 1; height: 4px; background: var(--blue); position: relative; }
+        .progress-bar-fill { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+        .progress-text { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 1px; color: var(--accent); }
+        .question-text { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 1.5rem; color: var(--white); }
+        .answers-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+        .answer-row { background: var(--deep); border: 1px solid var(--border); padding: 1.2rem; text-align: left; width: 100%; color: var(--light); font-family: 'Barlow', sans-serif; font-size: 0.95rem; font-weight: 400; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .answer-row:hover { border-color: var(--accent); color: var(--white); background: var(--module-hover); }
+        .answer-row.selected { border-color: var(--accent); background: rgba(30, 91, 220, 0.1); color: var(--white); border-left: 4px solid var(--accent); }
+        .answer-row.correct { border-color: var(--green) !important; background: rgba(39, 174, 96, 0.1) !important; color: var(--white) !important; border-left: 4px solid var(--green) !important; }
+        .answer-row.wrong { border-color: var(--red) !important; background: rgba(192, 57, 43, 0.1) !important; color: var(--white) !important; border-left: 4px solid var(--red) !important; }
+        .answer-row:disabled { cursor: not-allowed; opacity: 0.8; }
+        .feedback-box { padding: 1.2rem; margin-top: 1.5rem; border-left: 3px solid transparent; font-size: 0.95rem; }
+        .feedback-box.box-success { background: rgba(39, 174, 96, 0.06); border-left-color: var(--green); }
+        .feedback-box.box-danger { background: rgba(192, 57, 43, 0.06); border-left-color: var(--red); }
+        .feedback-title { font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .feedback-title.txt-success { color: var(--green); }
+        .feedback-title.txt-danger { color: var(--red); }
+        .conseil-pro { background: var(--navy); border: 1px solid var(--border); padding: 0.8rem 1rem; margin-top: 0.75rem; font-size: 0.9rem; color: var(--light); }
+        .score-display { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; line-height: 1; margin: 1rem 0; letter-spacing: 2px; }
+        .mention-text { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1.5rem; }
+        .error-review-item { padding: 1.2rem 0; border-bottom: 1px solid var(--border); }
+        .error-review-item:last-child { border-bottom: none; }
+        .review-q { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+        .chrono-badge { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--red); background: rgba(192, 57, 43, 0.1); border: 1px solid rgba(192, 57, 43, 0.25); padding: 2px 12px; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; }
+        .chip-module { font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(30,91,220,0.1); border: 1px solid var(--border); color: var(--white); padding: 2px 8px; margin-bottom: 0.5rem; display: inline-block; }
+        .chip-level { font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(230, 126, 34, 0.15); border: 1px solid rgba(230, 126, 34, 0.3); color: #e67e22; padding: 2px 8px; margin-bottom: 0.5rem; display: inline-block; margin-left: 6px; }
+        .interruption-badge {
+            font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; background: rgba(230, 126, 34, 0.15); border: 1px solid #e67e22;
+            color: #e67e22; padding: 6px 16px; margin: 1rem auto; display: inline-block;
+        }
+        footer { background: var(--deep); border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gray); }
+        footer strong { color: var(--white); }
+        #theme-toggle-wrap { position: fixed; bottom: 24px; left: 24px; z-index: 3001; display: flex; align-items: center; gap: 10px; }
+        #theme-toggle { flex-shrink: 0; width: 52px; height: 28px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; padding: 3px; border: 1px solid rgba(128,128,128,0.3); background: #2a3a5a; }
+        #theme-toggle::after { content: ''; display: block; width: 20px; height: 20px; border-radius: 50%; background: #f0f4ff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1); transform: translateX(24px); }
+        [data-theme="light"] #theme-toggle { background: #e8e4de; border-color: rgba(0,0,0,0.18); }
+        [data-theme="light"] #theme-toggle::after { transform: translateX(0); background: #fff; }
+        .toggle-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gray); background: var(--card); padding: 3px 8px; border-radius: 4px; border: 0.5px solid var(--border); pointer-events: none; }
+        [v-cloak] { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="app" v-cloak>
+        <div id="theme-toggle-wrap">
+            <div id="theme-toggle" @click="toggleTheme" role="switch"></div>
+            <span class="toggle-label">{{ isDarkMode ? 'Mode sombre' : 'Mode clair' }}</span>
+        </div>
+
+        <nav>
+            <div class="nav-logo">ARAGO <span>ÉVALUATION</span></div>
+            <div v-if="currentScreen === 'quiz'" class="nav-mode-badge">{{ currentMode === 'training' ? 'Entraînement' : 'Examen' }}</div>
+        </nav>
+
+        <main>
+            <div class="hero-bg" v-if="currentScreen === 'home'">
+                <div class="hero-grid"></div><div class="hero-glow"></div>
+            </div>
+
+            <div v-if="currentScreen === 'home'">
+                <div class="section-tag">Espace Numérique</div>
+                <h2 class="page-title">CONTRÔLE DES<br>CONNAISSANCES <em>SÉCURITÉ</em></h2>
+                <div class="mode-grid">
+                    <div class="interactive-card" @click="selectMode('training')">
+                        <div class="card-num">MODE ACADÉMIQUE</div>
+                        <div class="card-name">Entraînement par Module</div>
+                        <div class="card-desc">Idéal pour l'apprentissage. Auto-correction immédiate avec conseils. Non tracé.</div>
+                    </div>
+                    <div class="interactive-card" @click="selectMode('exam')">
+                        <div class="card-num">CONDITIONS DU TITRE</div>
+                        <div class="card-name">Examen Blanc</div>
+                        <div class="card-desc">Évaluation paramétrable. Questions croisées équitablement. Sécurité anti-triche active. Rapport prof automatique.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentScreen === 'level-setup'">
+                <button @click="backToHome" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Retour</button>
+                <div class="section-tag">Filiation pédagogique</div>
+                <h2 class="page-title">SÉLECTION DU <em>NIVEAU</em></h2>
+                
+                <div class="mode-grid" style="max-width: 700px; margin: 2rem auto 0 auto;">
+                    <div class="interactive-card" @click="selectLevel('seconde')">
+                        <div class="card-num">BAC PRO 1 ÉRE ANNÉE</div>
+                        <div class="card-name">Seconde</div>
+                        <div class="card-desc">Accès restrictif aux questions fondamentales de niveau Seconde uniquement.</div>
+                    </div>
+                    <div class="interactive-card" @click="selectLevel('premiere')">
+                        <div class="card-num">BAC PRO 2 ÉME ANNÉE</div>
+                        <div class="card-name">Première</div>
+                        <div class="card-desc">Accès étendu : regroupe le programme de Seconde et les modules spécifiques de Première.</div>
+                    </div>
+                    <div class="interactive-card" @click="selectLevel('terminale')" style="grid-column: span 2;">
+                        <div class="card-num">CYCLE COMPLET / BTS</div>
+                        <div class="card-name">Terminale</div>
+                        <div class="card-desc">Accès total à l'ensemble de la base de données (Seconde, Première, Terminale).</div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentScreen === 'exam-setup'">
+                <button @click="currentScreen = 'level-setup'" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Changer de niveau</button>
+                <div class="section-tag">Configuration réglementaire — Niveau {{ selectedLevelLabel }}</div>
+                <h2 class="page-title">VOLUME DE <em>L'ÉPREUVE</em></h2>
+                
+                <div class="panel" style="max-width: 650px; margin: 0 auto; text-align: center;">
+                    <div class="card-num" style="margin-bottom: 1.5rem;"><i class="fas fa-shield-alt"></i> Sélectionnez un format ({{ totalAvailableQuestions }} questions éligibles)</div >
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                        <button v-for="qSize in" :key="qSize" @click="executeExamSetup(qSize)" class="btn-arago" :disabled="totalAvailableQuestions < qSize" style="display: flex; flex-direction: column; padding: 15px; justify-content: center; align-items: center; gap: 4px; height: 90px; width: 100%;">
+                            <span style="font-family: 'Bebas Neue'; font-size: 1.8rem; letter-spacing: 1px; line-height: 1;">{{ qSize }} Q</span>
+                            <span style="font-family: 'Barlow Condensed'; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; opacity: 0.9;"><i class="fas fa-clock"></i> {{ qSize }} MIN</span>
+                        </button>
+                    </div>
+                    <div class="conseil-pro" style="text-align: left; border-left-color: var(--accent);">
+                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> <strong>Filtre Niveau :</strong> Seules les questions de niveau réglementaire correspondant à votre sélection sont injectées.</p>
+                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-clock"></i> <strong>Chronomètre :</strong> Vous disposez de <strong>1 minute maximum par question</strong>.</p>
+                        <p style="color: var(--red); font-weight: 500; margin-top: 0.8rem;"><i class="fas fa-user-lock"></i> <strong>Sécurité anti-triche :</strong> Tout changement d'onglet ou perte de focus de la fenêtre verrouillera l'épreuve.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentScreen === 'modules'">
+                <button @click="currentScreen = 'level-setup'" class="btn-arago-ghost" style="margin-bottom: 2rem;"><i class="fas fa-arrow-left"></i> Changer de niveau</button>
+                <div class="section-tag">Parcours ciblés — Niveau {{ selectedLevelLabel }}</div>
+                <h2 class="page-title">UNITÉS DE <em>FORMATION</em></h2>
+                
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    <div class="panel" v-for="(subModules, moduleName) in syllabusData" :key="moduleName">
+                        <div class="card-num"><i class="fas fa-user-shield"></i> {{ moduleName.toUpperCase() }}</div>
+                        <div class="card-name">Filière Métiers de la Sécurité</div>
+                        <div class="card-desc">Sélectionnez un sous-module éligible pour débuter les cas pratiques.</div>
+                        
+                        <div class="sub-modules-vertical-stack">
+                            <div class="sub-module-row-item" v-for="(questions, subName) in subModules" :key="subName">
+                                <div class="sub-module-meta-line">
+                                    <span class="sub-module-label-title">{{ subName }}</span>
+                                    <button class="btn-sub-launch" @click="startTraining(questions)">
+                                        Lancer ({{ questions.length }} Q) <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentScreen === 'quiz'">
+                <div class="panel">
+                    <div class="panel-header-tactical">
+                        <span class="panel-title">Question {{ currentIndex + 1 }} / {{ quizQuestions.length }}</span>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <span v-if="currentMode === 'exam'" class="chrono-badge"><i class="fas fa-hourglass-half"></i> {{ timeFormatter(examTimer) }}</span>
+                            <button @click="abortQuiz" class="btn-arago-ghost" style="padding: 6px 16px; font-size: 0.75rem;"><i class="fas fa-times"></i> Interrompre</button>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar-wrap"><div class="progress-bar-fill" :style="{ width: quizProgressPercentage + '%' }"></div></div>
+                        <span class="progress-text">{{ Math.round(quizProgressPercentage) }}%</span>
+                    </div>
+
+                    <div v-if="currentQuestion">
+                        <span class="chip-module">{{ currentQuestion.Module }}</span>
+                        <span v-if="currentQuestion.Niveau" class="chip-level">{{ currentQuestion.Niveau }}</span>
+                        <h3 class="question-text">{{ currentQuestion.Question }}</h3>
+
+                        <div class="answers-stack">
+                            <button class="answer-row" v-for="(ans, idx) in currentQuestion.shuffleBox" :key="idx" @click="pickAnswer(ans)" :disabled="hasValidatedAnswer && currentMode === 'training'" :class="fetchAnswerStyling(ans)">
+                                <span>{{ ans.texte }}</span>
+                                <i v-if="currentMode === 'training' && hasValidatedAnswer && ans.correct" class="fas fa-check-circle" style="color: var(--green);"></i>
+                                <i v-if="currentMode === 'training' && hasValidatedAnswer && selectedAnswer === ans && !ans.correct" class="fas fa-times-circle" style="color: var(--red);"></i>
+                            </button>
+                        </div>
+
+                        <div v-if="currentMode === 'training' && hasValidatedAnswer" class="feedback-box" :class="lastSelection.correct ? 'box-success' : 'box-danger'">
+                            <div class="feedback-title" :class="lastSelection.correct ? 'txt-success' : 'txt-danger'">
+                                <i :class="lastSelection.correct ? 'fas fa-shield-check' : 'fas fa-exclamation-triangle'"></i>
+                                {{ lastSelection.correct ? 'Analyse Conforme' : 'Alerte Non Conformité' }}
+                            </div>
+                            <p style="font-weight: 400; font-size: 0.95rem; margin-bottom: 0.5rem;">{{ currentQuestion.Justification }}</p>
+                            
+                            <div v-if="!lastSelection.correct && lastSelection.explication" class="conseil-pro" style="border-left-color: var(--red);">
+                                <strong>Rappel :</strong> {{ lastSelection.explication }}
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; text-align: right;">
+                            <button v-if="currentMode === 'training' && !hasValidatedAnswer" @click="commitTrainingAnswer" :disabled="!selectedAnswer" class="btn-arago">Valider l'action</button>
+                            <button v-if="currentMode === 'exam' || (currentMode === 'training' && hasValidatedAnswer)" @click="forwardQuestion" :disabled="currentMode === 'exam' && !selectedAnswer" class="btn-arago">
+                                {{ isFinalQuestion ? 'Clôturer le rapport' : 'Question suivante' }} <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentScreen === 'results'">
+                <div class="section-tag">Clôture du dossier</div>
+                <h2 class="page-title">RÉSULTATS DE <em>L'ÉVALUATION</em></h2>
+
+                <div class="panel" style="text-align: center;">
+                    <div v-if="isInterrupted || isCheated" class="interruption-badge">
+                        <i class="fas fa-lock"></i> Épreuve verrouillée par l'instructeur {{ isCheated ? '(Perte de focus)' : '(Abandon)' }}
+                    </div>
+                    
+                    <div class="card-num" :style="{ color: checkScoreColor }">Note globale validée</div>
+                    <div class="score-display" :style="{ color: checkScoreColor }">{{ finalScore }} / {{ quizQuestions.length }}</div>
+                    <div class="mention-text">{{ fetchGradeMention() }}</div>
+
+                    <div v-if="currentMode === 'exam'" style="margin: 2rem 0;">
+                        <p style="font-size: 0.95rem; color: var(--gray); margin-bottom: 1rem;">Pour officialiser ce score auprès de votre enseignant, cliquez ci-dessous :</p>
+                        <button @click="dispatchInstructorEmail" class="btn-arago"><i class="fas fa-paper-plane"></i> Transmettre le rapport par mail</button>
+                    </div>
+
+                    <button @click="backToHome" class="btn-arago-ghost" style="margin-top: 1rem;"><i class="fas fa-home"></i> Retour à l'accueil</button>
+                </div>
+
+                <div class="panel" v-if="missedQuestionsReview.length > 0">
+                    <div class="panel-title" style="margin-bottom: 1.5rem; color: var(--red);"><i class="fas fa-history"></i> Analyse des points de vigilance</div>
+                    <div class="error-review-item" v-for="(item, index) in missedQuestionsReview" :key="index">
+                        <div class="review-q">Q: {{ item.q.Question }}</div>
+                        <p style="font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--gray);">
+                            Votre réponse : <span style="color: var(--red); font-weight: 500;">{{ item.userChoice.texte }}</span>
+                        </p>
+                        <p style="font-size: 0.9rem; margin-bottom: 0.6rem; color: var(--green);">
+                            Réponse réglementaire : <strong>{{ item.q['✅ BONNE RÉPONSE'] }}</strong>
+                        </p>
+                        <div class="conseil-pro" style="border-left-color: var(--accent); margin-top: 0.5rem; font-size: 0.88rem;">
+                            <strong>Justification :</strong> {{ item.q.Justification }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            Lycée François Arago — Unité d'Enseignement Métiers de la Sécurité & Sûreté Opérationnelle — <strong>2026</strong>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, onBeforeUnmount } = Vue;
+
+        createApp({
+            setup() {
+                // États globaux navigation
+                const currentScreen = ref('home'); 
+                const currentMode = ref(''); 
+                const selectedLevel = ref(''); // 'seconde', 'premiere', 'terminale'
+                
+                // Bases de données brutes et filtrées
+                const rawDatabase = ref([]);
+                const filteredQuestions = ref([]);
+                const syllabusData = ref({});
+
+                // États Quiz
+                const quizQuestions = ref([]);
+                const currentIndex = ref(0);
+                const selectedAnswer = ref(null);
+                const hasValidatedAnswer = ref(false);
+                const lastSelection = ref({ correct: false, explication: '' });
+                const operationalLog = ref([]);
+                const finalScore = ref(0);
+
+                // Variables annexes
+                const examTimer = ref(0);
+                const timerIdentifier = ref(null);
+                const isDarkMode = ref(true);
+                const isInterrupted = ref(false);
+                const isCheated = ref(false);
+
+                // Libellé textuel du niveau
+                const selectedLevelLabel = computed(() => {
+                    if (selectedLevel.value === 'seconde') return 'Seconde';
+                    if (selectedLevel.value === 'premiere') return 'Première';
+                    if (selectedLevel.value === 'terminale') return 'Terminale';
+                    return '';
+                });
+
+                // Calcul du volume de questions disponibles pour l'examen blanc
+                const totalAvailableQuestions = computed(() => filteredQuestions.value.length);
+
+                const currentQuestion = computed(() => {
+                    if (quizQuestions.value.length > 0 && currentIndex.value < quizQuestions.value.length) {
+                        return quizQuestions.value[currentIndex.value];
+                    }
+                    return null;
+                });
+
+                const isFinalQuestion = computed(() => currentIndex.value === quizQuestions.value.length - 1);
+                const quizProgressPercentage = computed(() => (currentIndex.value / quizQuestions.value.length) * 100);
+
+                const checkScoreColor = computed(() => {
+                    if (quizQuestions.value.length === 0) return 'var(--white)';
+                    const ratio = finalScore.value / quizQuestions.value.length;
+                    if (ratio >= 0.8) return 'var(--green)';
+                    if (ratio >= 0.5) return '#f39c12';
+                    return 'var(--red)';
+                });
+
+                const missedQuestionsReview = computed(() => operationalLog.value.filter(log => !log.userChoice.correct));
+
+                // Cycle de vie : Chargement BDD
+                onMounted(() => {
+                    fetch('BDD-QCM.json')
+                        .then(res => res.json())
+                        .then(data => {
+                            rawDatabase.value = data;
+                        })
+                        .catch(err => console.error("Erreur d'approvisionnement JSON :", err));
+
+                    window.addEventListener('blur', handleSecurityWatch);
+                });
+
+                onBeforeUnmount(() => {
+                    window.removeEventListener('blur', handleSecurityWatch);
+                    clearInterval(timerIdentifier.value);
+                });
+
+                // Theme manager
+                const toggleTheme = () => {
+                    const html = document.documentElement;
+                    if(html.getAttribute("data-theme") === "dark"){
+                        html.setAttribute("data-theme", "light");
+                        isDarkMode.value = false;
+                        localStorage.setItem("arago-theme", "light");
+                    } else {
+                        html.setAttribute("data-theme", "dark");
+                        isDarkMode.value = true;
+                        localStorage.setItem("arago-theme", "dark");
+                    }
+                };
+
+                // Étape 1 : Choix du Mode (Entraînement ou Examen)
+                const selectMode = (mode) => {
+                    currentMode.value = mode;
+                    isInterrupted.value = false;
+                    isCheated.value = false;
+                    currentScreen.value = 'level-setup';
+                };
+
+                // Étape 2 : Choix du Niveau & Filtrage dynamique
+                const selectLevel = (level) => {
+                    selectedLevel.value = level;
+
+                    // Application des règles de filtrage cumulatif
+                    filteredQuestions.value = rawDatabase.value.filter(q => {
+                        const qNiveau = q.Niveau ? q.Niveau.toLowerCase().trim() : 'seconde'; // Seconde par défaut si non spécifié
+                        
+                        if (level === 'seconde') {
+                            return qNiveau === 'seconde';
+                        } else if (level === 'premiere') {
+                            return qNiveau === 'seconde' || qNiveau === 'première' || qNiveau === 'premiere';
+                        } else if (level === 'terminale') {
+                            return true; // Accès global complet
+                        }
+                        return true;
+                    });
+
+                    // Orientation de l'affichage selon le mode initial choisi
+                    if (currentMode.value === 'exam') {
+                        currentScreen.value = 'exam-setup';
+                    } else {
+                        buildTrainingSyllabus();
+                        currentScreen.value = 'modules';
+                    }
+                };
+
+                // Groupement structurel de l'entraînement par Module / Sous-module
+                const buildTrainingSyllabus = () => {
+                    const structure = {};
+                    filteredQuestions.value.forEach(q => {
+                        const m = q.Module || "Général";
+                        const sm = q["Sous module"] || "Tronc Commun";
+                        if (!structure[m]) structure[m] = {};
+                        if (!structure[m][sm]) structure[m][sm] = [];
+                        structure[m][sm].push(q);
+                    });
+                    syllabusData.value = structure;
+                };
+
+                const startTraining = (questionsList) => {
+                    setupQuizArena(questionsList, false);
+                };
+
+                // Configuration de l'Examen Blanc (Tirage équilibré entre les modules disponibles)
+                const executeExamSetup = (targetSize) => {
+                    const modulesMap = {};
+                    filteredQuestions.value.forEach(q => {
+                        const m = q.Module || "Général";
+                        if (!modulesMap[m]) modulesMap[m] = [];
+                        modulesMap[m].push(q);
+                    });
+
+                    const selectedPool = [];
+                    const keys = Object.keys(modulesMap);
+                    let counter = 0;
+
+                    // Mélange des questions à l'intérieur de chaque groupe de module
+                    keys.forEach(k => shuffleArray(modulesMap[k]));
+
+                    while (selectedPool.length < targetSize && selectedPool.length < filteredQuestions.value.length) {
+                        const currentKey = keys[counter % keys.length];
+                        const pool = modulesMap[currentKey];
+                        if (pool && pool.length > 0) {
+                            selectedPool.push(pool.shift());
+                        }
+                        counter++;
+                        // Sécurité anti-boucle infinie si tous les pools sont vidés
+                        if(keys.every(k => !modulesMap[k] || modulesMap[k].length === 0) && selectedPool.length < targetSize) {
+                            break;
+                        }
+                    }
+
+                    setupQuizArena(selectedPool, true);
+                };
+
+                // Initialisation de la session de questionnaire
+                const setupQuizArena = (questions, isExam) => {
+                    quizQuestions.value = questions.map(q => {
+                        const shuffleBox = [
+                            { texte: q['✅ BONNE RÉPONSE'], correct: true, explication: null },
+                            { texte: q['Mauvaise 1'], correct: false, explication: q['Explication si mauvaise 1'] || null },
+                            { texte: q['Mauvaise 2'], correct: false, explication: q['Explication si mauvaise 2'] || null },
+                            { texte: q['Mauvaise 3'], correct: false, explication: q['Explication si mauvaise 3'] || null }
+                        ].filter(ans => ans.texte); // Filtre les choix vides
+                        
+                        shuffleArray(shuffleBox);
+                        return { ...q, shuffleBox };
+                    });
+
+                    shuffleArray(quizQuestions.value);
+
+                    currentIndex.value = 0;
+                    selectedAnswer.value = null;
+                    hasValidatedAnswer.value = false;
+                    operationalLog.value = [];
+                    finalScore.value = 0;
+
+                    if (isExam) {
+                        examTimer.value = quizQuestions.value.length * 60;
+                        clearInterval(timerIdentifier.value);
+                        timerIdentifier.value = setInterval(() => {
+                            if (examTimer.value > 0) {
+                                examTimer.value--;
+                            } else {
+                                handleQuizClosure(false);
+                            }
+                        }, 1000);
+                    }
+
+                    currentScreen.value = 'quiz';
+                };
+
+                const pickAnswer = (answerObj) => {
+                    if (currentMode.value === 'training' && hasValidatedAnswer.value) return;
+                    selectedAnswer.value = answerObj;
+                };
+
+                const commitTrainingAnswer = () => {
+                    if (!selectedAnswer.value) return;
+                    hasValidatedAnswer.value = true;
+                    lastSelection.value = {
+                        correct: selectedAnswer.value.correct,
+                        explication: selectedAnswer.value.explication
+                    };
+                    if (selectedAnswer.value.correct) finalScore.value++;
+                    
+                    operationalLog.value.push({
+                        q: currentQuestion.value,
+                        userChoice: selectedAnswer.value
+                    });
+                };
+
+                const forwardQuestion = () => {
+                    if (currentMode.value === 'exam') {
+                        if (selectedAnswer.value.correct) finalScore.value++;
+                        operationalLog.value.push({
+                            q: currentQuestion.value,
+                            userChoice: selectedAnswer.value
+                        });
+                    }
+
+                    if (!isFinalQuestion.value) {
+                        currentIndex.value++;
+                        selectedAnswer.value = null;
+                        hasValidatedAnswer.value = false;
+                    } else {
+                        handleQuizClosure(true);
+                    }
+                };
+
+                const handleQuizClosure = (completedNormally) => {
+                    clearInterval(timerIdentifier.value);
+                    currentScreen.value = 'results';
+                    
+                    if (completedNormally && (finalScore.value / quizQuestions.value.length) >= 0.75) {
+                        triggerTacticalConfetti();
+                    }
+                };
+
+                const abortQuiz = () => {
+                    isInterrupted.value = true;
+                    handleQuizClosure(false);
+                };
+
+                const handleSecurityWatch = () => {
+                    if (currentScreen.value === 'quiz' && currentMode.value === 'exam') {
+                        isCheated.value = true;
+                        handleQuizClosure(false);
+                    }
+                };
+
+                // Mise en forme des réponses
+                const fetchAnswerStyling = (ans) => {
+                    if (currentMode.value === 'training' && hasValidatedAnswer.value) {
+                        if (ans.correct) return 'correct';
+                        if (selectedAnswer.value === ans && !ans.correct) return 'wrong';
+                        return '';
+                    }
+                    return selectedAnswer.value === ans ? 'selected' : '';
+                };
+
+                // Attribution des mentions de notation
+                const fetchGradeMention = () => {
+                    if (isCheated.value) return "ÉPREUVE INVALIDÉE — INFRACTION AU PROTOCOLE ANTI-TICHE";
+                    if (isInterrupted.value) return "RAPPORT INCOMPLET — INTERRUPTION SÉCURITÉ";
+                    
+                    const ratio = finalScore.value / quizQuestions.value.length;
+                    if (ratio === 1) return "POSTURE EXCELLENTE — MAÎTRISE ABSOLUE";
+                    if (ratio >= 0.85) return "TRÈS SATISFAISANT — APTE AUX MISSIONS";
+                    if (ratio >= 0.7) return "MENTION ASSEZ BIEN — NIVEAU OPÉRATIONNEL VALIDÉ";
+                    if (ratio >= 0.5) return "SITUATION INTERMÉDIAIRE — REVOIR LES CONSIGNES";
+                    return "ALERTE SÛRETÉ — INSUFFISANT, DOSSIER À REPRENDRE";
+                };
+
+                // Notification par Email automatique (mailto)
+                const dispatchInstructorEmail = () => {
+                    const studentIdentity = prompt("Veuillez saisir vos NOM et PRÉNOM pour authentifier le rapport :");
+                    if (!studentIdentity) return;
+
+                    let statusLabel = isCheated.value ? 'INVALIDÉ (TRICHE)' : (isInterrupted.value ? 'INTERROMPU' : 'TERMINÉ');
+                    let bodyPayload = `INSPECTEUR / ENSEIGNANT : TRANSMISSION RAPPORT EXAMEN BLANC\n`;
+                    bodyPayload += `--------------------------------------------------\n`;
+                    bodyPayload += `Identité de l'apprenant : ${studentIdentity}\n`;
+                    bodyPayload += `Niveau académique sélectionné : ${selectedLevelLabel.value}\n`;
+                    bodyPayload += `Statut : ${statusLabel}\n`;
+                    bodyPayload += `Score validé : ${finalScore.value} / ${quizQuestions.value.length}\n`;
+                    bodyPayload += `--------------------------------------------------\n\n`;
+
+                    operationalLog.value.forEach((entry, i) => {
+                        bodyPayload += `Q${i+1}: ${entry.q.question || entry.q.Question}\n`;
+                        bodyPayload += `Décision : ${entry.userChoice.texte} (${entry.userChoice.correct ? 'CONFORME' : 'NON CONFORME'})\n\n`;
+                    });
+
+                    window.location.href = `mailto:benoit.dol@monlycee.net?subject=Examen Securite (${selectedLevelLabel.value}) - ${encodeURIComponent(studentIdentity)}&body=${encodeURIComponent(bodyPayload)}`;
+                };
+
+                const backToHome = () => {
+                    clearInterval(timerIdentifier.value);
+                    currentScreen.value = 'home';
+                };
+
+                // Utilitaires pure JS
+                const shuffleArray = (array) => {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                };
+
+                const timeFormatter = (seconds) => {
+                    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                    const s = (seconds % 60).toString().padStart(2, '0');
+                    return `${m}:${s}`;
+                };
+
+                const triggerTacticalConfetti = () => {
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                };
+
+                return {
+                    syllabusData, currentScreen, currentMode, quizQuestions, currentIndex, selectedAnswer, hasValidatedAnswer, lastSelection, finalScore, examTimer, isDarkMode, isInterrupted,
+                    isCheated, currentQuestion, crushingVictory: isFinalQuestion, quizProgressPercentage, checkScoreColor, fetchGradeMention, missedQuestionsReview, selectedLevel, selectedLevelLabel, totalAvailableQuestions,
+                    selectMode, selectLevel, startTraining, backToHome, toggleTheme, pickAnswer, commitTrainingAnswer, forwardQuestion, abortQuiz, fetchAnswerStyling, timeFormatter, dispatchInstructorEmail, executeExamSetup
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

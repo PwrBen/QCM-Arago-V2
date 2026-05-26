@@ -379,7 +379,7 @@
 
                 const currentQuestion = computed(() => quizQuestions.value[currentIndex.value] || {});
                 const isFinalQuestion = computed(() => currentIndex.value === quizQuestions.value.length - 1);
-                const quizProgressPercentage = computed(() => (currentIndex.value / quizQuestions.value.length) * 100);
+                const quizProgressPercentage = computed(() => (currentIndex.value ? (currentIndex.value / quizQuestions.value.length) * 100 : 0));
                 const totalSessionQuestions = computed(() => quizQuestions.value.length);
 
                 onMounted(() => {
@@ -388,17 +388,15 @@
                     });
                     window.addEventListener('blur', triggerAntiCheatLock);
 
-                    // LECTURE DIRECTE DU FORMAT DE VOTRE FICHIER JSON
                     fetch('BDD-QCM.json')
                         .then(res => {
-                            if (!res.ok) throw new Error("Impossible de localiser le fichier BDD-QCM.json");
+                            if (!res.ok) throw new Error("Erreur serveur ou fichier introuvable");
                             return res.json();
                         })
                         .then(rawData => {
-                            // Mapping direct et simplifié selon votre fichier JSON fourni
                             questionDatabase.value = rawData.map(item => {
                                 return {
-                                    id: item.id || item.N° || Math.random(),
+                                    id: item.id || Math.random(),
                                     module: String(item.module || '').toLowerCase().trim(),
                                     subModule: String(item.subModule || '').trim(),
                                     question: String(item.question || '').trim(),
@@ -406,7 +404,7 @@
                                 };
                             });
                         })
-                        .catch(err => console.error("Erreur critique d'intégration de la BDD :", err));
+                        .catch(err => console.error("Erreur d'intégration JSON :", err));
                 });
 
                 function triggerAntiCheatLock() {
@@ -471,6 +469,7 @@
                 });
 
                 function backToClassSelect() { currentScreen.value = 'class-select'; }
+                
                 function selectMode(mode) {
                     currentMode.value = mode;
                     if (mode === 'training') currentScreen.value = 'modules';

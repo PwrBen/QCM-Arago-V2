@@ -76,7 +76,6 @@
         .sub-module-row-item:hover { border-color: var(--accent); background: var(--module-hover); }
         .sub-module-meta-line { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
         .sub-module-label-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px; color: var(--white); }
-        .sub-module-content-syllabus { font-size: 0.85rem; color: var(--gray); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed rgba(138, 154, 181, 0.15); line-height: 1.5; }
         .btn-arago { background: var(--accent); color: var(--btn-text); border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 12px 28px; cursor: pointer; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-arago:hover { filter: brightness(1.15); transform: translateY(-1px); }
         .btn-arago:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
@@ -171,12 +170,12 @@
                     <div class="interactive-card" @click="selectLevel('seconde')">
                         <div class="card-num">BAC PRO 1 ÉRE ANNÉE</div>
                         <div class="card-name">Seconde</div>
-                        <div class="card-desc">Accès restrictif aux questions fondamentales de niveau Seconde uniquement.</div>
+                        <div class="card-desc">Accès restrictif aux questions de niveau Seconde uniquement.</div>
                     </div>
                     <div class="interactive-card" @click="selectLevel('premiere')">
                         <div class="card-num">BAC PRO 2 ÉME ANNÉE</div>
                         <div class="card-name">Première</div>
-                        <div class="card-desc">Accès étendu : regroupe le programme de Seconde et les modules spécifiques de Première.</div>
+                        <div class="card-desc">Accès étendu : regroupe le programme de Seconde et les notions de Première.</div>
                     </div>
                     <div class="interactive-card" @click="selectLevel('terminale')" style="grid-column: span 2;">
                         <div class="card-num">CYCLE COMPLET / BTS</div>
@@ -192,7 +191,7 @@
                 <h2 class="page-title">VOLUME DE <em>L'ÉPREUVE</em></h2>
                 
                 <div class="panel" style="max-width: 650px; margin: 0 auto; text-align: center;">
-                    <div class="card-num" style="margin-bottom: 1.5rem;"><i class="fas fa-shield-alt"></i> Sélectionnez un format ({{ totalAvailableQuestions }} questions éligibles)</div >
+                    <div class="card-num" style="margin-bottom: 1.5rem;"><i class="fas fa-shield-alt"></i> Sélectionnez un format ({{ totalAvailableQuestions }} questions éligibles)</div>
                     
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 2rem;">
                         <button v-for="qSize in" :key="qSize" @click="executeExamSetup(qSize)" class="btn-arago" :disabled="totalAvailableQuestions < qSize" style="display: flex; flex-direction: column; padding: 15px; justify-content: center; align-items: center; gap: 4px; height: 90px; width: 100%;">
@@ -201,9 +200,9 @@
                         </button>
                     </div>
                     <div class="conseil-pro" style="text-align: left; border-left-color: var(--accent);">
-                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> <strong>Filtre Niveau :</strong> Seules les questions de niveau réglementaire correspondant à votre sélection sont injectées.</p>
-                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-clock"></i> <strong>Chronomètre :</strong> Vous disposez de <strong>1 minute maximum par question</strong>.</p>
-                        <p style="color: var(--red); font-weight: 500; margin-top: 0.8rem;"><i class="fas fa-user-lock"></i> <strong>Sécurité anti-triche :</strong> Tout changement d'onglet ou perte de focus de la fenêtre verrouillera l'épreuve.</p>
+                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> <strong>Filtre Niveau :</strong> Seules les questions correspondant à la sélection de niveau sont injectées.</p>
+                        <p style="margin-bottom: 0.5rem;"><i class="fas fa-clock"></i> <strong>Chronomètre :</strong> Vous disposez de 1 minute maximum par question.</p>
+                        <p style="color: var(--red); font-weight: 500; margin-top: 0.8rem;"><i class="fas fa-user-lock"></i> <strong>Sécurité anti-triche :</strong> Tout changement d'onglet verrouille l'épreuve.</p>
                     </div>
                 </div>
             </div>
@@ -217,7 +216,7 @@
                     <div class="panel" v-for="(subModules, moduleName) in syllabusData" :key="moduleName">
                         <div class="card-num"><i class="fas fa-user-shield"></i> {{ moduleName.toUpperCase() }}</div>
                         <div class="card-name">Filière Métiers de la Sécurité</div>
-                        <div class="card-desc">Sélectionnez un sous-module éligible pour débuter les cas pratiques.</div>
+                        <div class="card-desc">Sélectionnez un sous-module éligible pour débuter.</div>
                         
                         <div class="sub-modules-vertical-stack">
                             <div class="sub-module-row-item" v-for="(questions, subName) in subModules" :key="subName">
@@ -229,6 +228,10 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div v-if="Object.keys(syllabusData).length === 0" class="panel" style="text-align:center; padding: 3rem;">
+                        <i class="fas fa-folder-open" style="font-size: 2rem; color: var(--gray); margin-bottom: 1rem;"></i>
+                        <p>Aucune question n'est disponible pour ce niveau avec la base actuelle.</p>
                     </div>
                 </div>
             </div>
@@ -332,17 +335,14 @@
 
         createApp({
             setup() {
-                // États globaux navigation
                 const currentScreen = ref('home'); 
                 const currentMode = ref(''); 
-                const selectedLevel = ref(''); // 'seconde', 'premiere', 'terminale'
+                const selectedLevel = ref(''); 
                 
-                // Bases de données brutes et filtrées
                 const rawDatabase = ref([]);
                 const filteredQuestions = ref([]);
                 const syllabusData = ref({});
 
-                // États Quiz
                 const quizQuestions = ref([]);
                 const currentIndex = ref(0);
                 const selectedAnswer = ref(null);
@@ -351,14 +351,12 @@
                 const operationalLog = ref([]);
                 const finalScore = ref(0);
 
-                // Variables annexes
                 const examTimer = ref(0);
                 const timerIdentifier = ref(null);
                 const isDarkMode = ref(true);
                 const isInterrupted = ref(false);
                 const isCheated = ref(false);
 
-                // Libellé textuel du niveau
                 const selectedLevelLabel = computed(() => {
                     if (selectedLevel.value === 'seconde') return 'Seconde';
                     if (selectedLevel.value === 'premiere') return 'Première';
@@ -366,7 +364,6 @@
                     return '';
                 });
 
-                // Calcul du volume de questions disponibles pour l'examen blanc
                 const totalAvailableQuestions = computed(() => filteredQuestions.value.length);
 
                 const currentQuestion = computed(() => {
@@ -377,7 +374,7 @@
                 });
 
                 const isFinalQuestion = computed(() => currentIndex.value === quizQuestions.value.length - 1);
-                const quizProgressPercentage = computed(() => (currentIndex.value / quizQuestions.value.length) * 100);
+                const quizProgressPercentage = computed(() => (quizQuestions.value.length > 0 ? (currentIndex.value / quizQuestions.value.length) * 100 : 0));
 
                 const checkScoreColor = computed(() => {
                     if (quizQuestions.value.length === 0) return 'var(--white)';
@@ -389,12 +386,11 @@
 
                 const missedQuestionsReview = computed(() => operationalLog.value.filter(log => !log.userChoice.correct));
 
-                // Cycle de vie : Chargement BDD
                 onMounted(() => {
                     fetch('BDD-QCM.json')
                         .then(res => res.json())
                         .then(data => {
-                            rawDatabase.value = data;
+                            rawDatabase.value = Array.isArray(data) ? data : [];
                         })
                         .catch(err => console.error("Erreur d'approvisionnement JSON :", err));
 
@@ -406,7 +402,6 @@
                     clearInterval(timerIdentifier.value);
                 });
 
-                // Theme manager
                 const toggleTheme = () => {
                     const html = document.documentElement;
                     if(html.getAttribute("data-theme") === "dark"){
@@ -420,7 +415,6 @@
                     }
                 };
 
-                // Étape 1 : Choix du Mode (Entraînement ou Examen)
                 const selectMode = (mode) => {
                     currentMode.value = mode;
                     isInterrupted.value = false;
@@ -428,25 +422,24 @@
                     currentScreen.value = 'level-setup';
                 };
 
-                // Étape 2 : Choix du Niveau & Filtrage dynamique
                 const selectLevel = (level) => {
                     selectedLevel.value = level;
 
-                    // Application des règles de filtrage cumulatif
+                    // Filtrage sécurisé (insensible à la casse, "Seconde" par défaut si absent)
                     filteredQuestions.value = rawDatabase.value.filter(q => {
-                        const qNiveau = q.Niveau ? q.Niveau.toLowerCase().trim() : 'seconde'; // Seconde par défaut si non spécifié
+                        const rawNiveau = q.Niveau || q.niveau || 'seconde';
+                        const qNiveau = rawNiveau.toLowerCase().trim();
                         
                         if (level === 'seconde') {
                             return qNiveau === 'seconde';
                         } else if (level === 'premiere') {
                             return qNiveau === 'seconde' || qNiveau === 'première' || qNiveau === 'premiere';
                         } else if (level === 'terminale') {
-                            return true; // Accès global complet
+                            return true; 
                         }
                         return true;
                     });
 
-                    // Orientation de l'affichage selon le mode initial choisi
                     if (currentMode.value === 'exam') {
                         currentScreen.value = 'exam-setup';
                     } else {
@@ -455,12 +448,12 @@
                     }
                 };
 
-                // Groupement structurel de l'entraînement par Module / Sous-module
                 const buildTrainingSyllabus = () => {
                     const structure = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
-                        const sm = q["Sous module"] || "Tronc Commun";
+                        // Prise en compte de l'espace exact trouvé dans votre BDD-QCM.json
+                        const sm = q["Sous module"] || q["Sous-module"] || "Tronc Commun";
                         if (!structure[m]) structure[m] = {};
                         if (!structure[m][sm]) structure[m][sm] = [];
                         structure[m][sm].push(q);
@@ -472,7 +465,6 @@
                     setupQuizArena(questionsList, false);
                 };
 
-                // Configuration de l'Examen Blanc (Tirage équilibré entre les modules disponibles)
                 const executeExamSetup = (targetSize) => {
                     const modulesMap = {};
                     filteredQuestions.value.forEach(q => {
@@ -485,7 +477,6 @@
                     const keys = Object.keys(modulesMap);
                     let counter = 0;
 
-                    // Mélange des questions à l'intérieur de chaque groupe de module
                     keys.forEach(k => shuffleArray(modulesMap[k]));
 
                     while (selectedPool.length < targetSize && selectedPool.length < filteredQuestions.value.length) {
@@ -495,7 +486,6 @@
                             selectedPool.push(pool.shift());
                         }
                         counter++;
-                        // Sécurité anti-boucle infinie si tous les pools sont vidés
                         if(keys.every(k => !modulesMap[k] || modulesMap[k].length === 0) && selectedPool.length < targetSize) {
                             break;
                         }
@@ -504,7 +494,6 @@
                     setupQuizArena(selectedPool, true);
                 };
 
-                // Initialisation de la session de questionnaire
                 const setupQuizArena = (questions, isExam) => {
                     quizQuestions.value = questions.map(q => {
                         const shuffleBox = [
@@ -512,7 +501,7 @@
                             { texte: q['Mauvaise 1'], correct: false, explication: q['Explication si mauvaise 1'] || null },
                             { texte: q['Mauvaise 2'], correct: false, explication: q['Explication si mauvaise 2'] || null },
                             { texte: q['Mauvaise 3'], correct: false, explication: q['Explication si mauvaise 3'] || null }
-                        ].filter(ans => ans.texte); // Filtre les choix vides
+                        ].filter(ans => ans.texte); 
                         
                         shuffleArray(shuffleBox);
                         return { ...q, shuffleBox };
@@ -563,10 +552,10 @@
 
                 const forwardQuestion = () => {
                     if (currentMode.value === 'exam') {
-                        if (selectedAnswer.value.correct) finalScore.value++;
+                        if (selectedAnswer.value && selectedAnswer.value.correct) finalScore.value++;
                         operationalLog.value.push({
                             q: currentQuestion.value,
-                            userChoice: selectedAnswer.value
+                            userChoice: selectedAnswer.value || { texte: 'Sans réponse', correct: false }
                         });
                     }
 
@@ -582,8 +571,7 @@
                 const handleQuizClosure = (completedNormally) => {
                     clearInterval(timerIdentifier.value);
                     currentScreen.value = 'results';
-                    
-                    if (completedNormally && (finalScore.value / quizQuestions.value.length) >= 0.75) {
+                    if (completedNormally && quizQuestions.value.length > 0 && (finalScore.value / quizQuestions.value.length) >= 0.75) {
                         triggerTacticalConfetti();
                     }
                 };
@@ -600,7 +588,6 @@
                     }
                 };
 
-                // Mise en forme des réponses
                 const fetchAnswerStyling = (ans) => {
                     if (currentMode.value === 'training' && hasValidatedAnswer.value) {
                         if (ans.correct) return 'correct';
@@ -610,10 +597,10 @@
                     return selectedAnswer.value === ans ? 'selected' : '';
                 };
 
-                // Attribution des mentions de notation
                 const fetchGradeMention = () => {
-                    if (isCheated.value) return "ÉPREUVE INVALIDÉE — INFRACTION AU PROTOCOLE ANTI-TICHE";
+                    if (isCheated.value) return "ÉPREUVE INVALIDÉE — INFRACTION AU PROTOCOLE ANTI-TRICHE";
                     if (isInterrupted.value) return "RAPPORT INCOMPLET — INTERRUPTION SÉCURITÉ";
+                    if (quizQuestions.value.length === 0) return "AUCUNE DONNÉE";
                     
                     const ratio = finalScore.value / quizQuestions.value.length;
                     if (ratio === 1) return "POSTURE EXCELLENTE — MAÎTRISE ABSOLUE";
@@ -623,7 +610,6 @@
                     return "ALERTE SÛRETÉ — INSUFFISANT, DOSSIER À REPRENDRE";
                 };
 
-                // Notification par Email automatique (mailto)
                 const dispatchInstructorEmail = () => {
                     const studentIdentity = prompt("Veuillez saisir vos NOM et PRÉNOM pour authentifier le rapport :");
                     if (!studentIdentity) return;
@@ -638,7 +624,7 @@
                     bodyPayload += `--------------------------------------------------\n\n`;
 
                     operationalLog.value.forEach((entry, i) => {
-                        bodyPayload += `Q${i+1}: ${entry.q.question || entry.q.Question}\n`;
+                        bodyPayload += `Q${i+1}: ${entry.q.Question || 'Question sans titre'}\n`;
                         bodyPayload += `Décision : ${entry.userChoice.texte} (${entry.userChoice.correct ? 'CONFORME' : 'NON CONFORME'})\n\n`;
                     });
 
@@ -650,7 +636,6 @@
                     currentScreen.value = 'home';
                 };
 
-                // Utilitaires pure JS
                 const shuffleArray = (array) => {
                     for (let i = array.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
@@ -670,7 +655,7 @@
 
                 return {
                     syllabusData, currentScreen, currentMode, quizQuestions, currentIndex, selectedAnswer, hasValidatedAnswer, lastSelection, finalScore, examTimer, isDarkMode, isInterrupted,
-                    isCheated, currentQuestion, crushingVictory: isFinalQuestion, quizProgressPercentage, checkScoreColor, fetchGradeMention, missedQuestionsReview, selectedLevel, selectedLevelLabel, totalAvailableQuestions,
+                    isCheated, currentQuestion, isFinalQuestion, quizProgressPercentage, checkScoreColor, fetchGradeMention, missedQuestionsReview, selectedLevel, selectedLevelLabel, totalAvailableQuestions,
                     selectMode, selectLevel, startTraining, backToHome, toggleTheme, pickAnswer, commitTrainingAnswer, forwardQuestion, abortQuiz, fetchAnswerStyling, timeFormatter, dispatchInstructorEmail, executeExamSetup
                 };
             }

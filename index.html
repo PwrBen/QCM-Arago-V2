@@ -390,7 +390,14 @@
                     fetch('BDD-QCM.json')
                         .then(res => res.json())
                         .then(data => {
-                            rawDatabase.value = Array.isArray(data) ? data : [];
+                            // Nettoyage complet des données à la source pour éviter l'écran blanc
+                            const base = Array.isArray(data) ? data : [];
+                            rawDatabase.value = base.map(q => {
+                                if (q.Niveau) {
+                                    q.Niveau = String(q.Niveau).replace(/[\r\n]/g, '').trim();
+                                }
+                                return q;
+                            });
                         })
                         .catch(err => console.error("Erreur d'approvisionnement JSON :", err));
 
@@ -425,7 +432,6 @@
                 const selectLevel = (level) => {
                     selectedLevel.value = level;
 
-                    // Filtrage sécurisé (insensible à la casse, "Seconde" par défaut si absent)
                     filteredQuestions.value = rawDatabase.value.filter(q => {
                         const rawNiveau = q.Niveau || q.niveau || 'seconde';
                         const qNiveau = rawNiveau.toLowerCase().trim();
@@ -452,7 +458,6 @@
                     const structure = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
-                        // Prise en compte de l'espace exact trouvé dans votre BDD-QCM.json
                         const sm = q["Sous module"] || q["Sous-module"] || "Tronc Commun";
                         if (!structure[m]) structure[m] = {};
                         if (!structure[m][sm]) structure[m][sm] = [];

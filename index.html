@@ -390,11 +390,13 @@
                     fetch('BDD-QCM.json')
                         .then(res => res.json())
                         .then(data => {
-                            // Nettoyage complet des données à la source pour éviter l'écran blanc
                             const base = Array.isArray(data) ? data : [];
                             rawDatabase.value = base.map(q => {
-                                if (q.Niveau) {
-                                    q.Niveau = String(q.Niveau).replace(/[\r\n]/g, '').trim();
+                                if (q.Niveau || q.niveau) {
+                                    const rawN = q.Niveau || q.niveau;
+                                    q.Niveau = String(rawN).replace(/[\r\n]/g, '').trim();
+                                } else {
+                                    q.Niveau = 'Seconde'; // Par défaut si absent
                                 }
                                 return q;
                             });
@@ -433,8 +435,7 @@
                     selectedLevel.value = level;
 
                     filteredQuestions.value = rawDatabase.value.filter(q => {
-                        const rawNiveau = q.Niveau || q.niveau || 'seconde';
-                        const qNiveau = rawNiveau.toLowerCase().trim();
+                        const qNiveau = q.Niveau.toLowerCase().trim();
                         
                         if (level === 'seconde') {
                             return qNiveau === 'seconde';
@@ -458,7 +459,10 @@
                     const structure = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
-                        const sm = q["Sous module"] || q["Sous-module"] || "Tronc Commun";
+                        
+                        // Détection blindée de la clé sous-module quelle que soit son écriture dans le JSON
+                        const sm = q["Sous module"] || q["Sousmodule"] || q["Sous-module"] || q["sousmodule"] || "Tronc Commun";
+                        
                         if (!structure[m]) structure[m] = {};
                         if (!structure[m][sm]) structure[m][sm] = [];
                         structure[m][sm].push(q);

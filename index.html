@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <script>
-        // Gestion immédiate du thème pour éviter le flash blanc
         (function(){
             var s = localStorage.getItem("arago-theme");
             var p = window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches;
@@ -171,7 +170,7 @@
                     <div class="interactive-card" @click="selectLevel('seconde')">
                         <div class="card-num">BAC PRO 1 ÉRE ANNÉE</div>
                         <div class="card-name">Seconde</div>
-                        <div class="card-desc">Accès exclusif aux questions de niveau Seconde uniquement.</div>
+                        <div class="card-desc">Accès restrictif aux questions de niveau Seconde uniquement.</div>
                     </div>
                     <div class="interactive-card" @click="selectLevel('premiere')">
                         <div class="card-num">BAC PRO 2 ÉME ANNÉE</div>
@@ -324,17 +323,14 @@
 
         createApp({
             setup() {
-                // États de navigation principale
                 const currentScreen = ref('home'); 
                 const currentMode = ref(''); 
                 const selectedLevel = ref(''); 
                 
-                // Données structurées
                 const rawDatabase = ref([]);
                 const filteredQuestions = ref([]);
                 const syllabusData = ref({});
 
-                // États d'évaluation actifs
                 const quizQuestions = ref([]);
                 const currentIndex = ref(0);
                 const selectedAnswer = ref(null);
@@ -343,14 +339,13 @@
                 const operationalLog = ref([]);
                 const finalScore = ref(0);
 
-                // Modules de surveillance
                 const examTimer = ref(0);
                 const timerIdentifier = ref(null);
                 const isDarkMode = ref(true);
                 const isInterrupted = ref(false);
                 const isCheated = ref(false);
 
-                // Fonction utilitaire pour ôter les accents de manière logicielle
+                // Normalisation logicielle stricte pour écraser accents, espaces et casses
                 const cleanText = (t) => {
                     return String(t).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 };
@@ -373,20 +368,18 @@
                     return (finalScore.value / quizQuestions.value.length) >= 0.7 ? 'var(--green)' : 'var(--red)';
                 });
 
-                // Récupération asynchrone sécurisée de la BDD
                 onMounted(() => {
                     fetch('BDD-QCM.json')
                         .then(res => res.json())
                         .then(data => {
                             const arr = Array.isArray(data) ? data : [];
                             rawDatabase.value = arr.map(q => {
-                                // Extraction adaptative de la clé Niveau
+                                // STRATÉGIE RADICALE : On va chercher la première propriété déclarée de l'objet
+                                // Peu importe son nom (Niveau, niveau, N°, etc.), puisque vous l'avez mise en PREMIER.
+                                const keys = Object.keys(q);
                                 let extractedLevel = 'Seconde';
-                                for (let key in q) {
-                                    if (key.toLowerCase().trim() === 'niveau') {
-                                        extractedLevel = String(q[key]).replace(/[\r\n]/g, '').trim();
-                                        break;
-                                    }
+                                if (keys.length > 0) {
+                                    extractedLevel = String(q[keys]).replace(/[\r\n]/g, '').trim();
                                 }
                                 q.Niveau = extractedLevel;
                                 return q;
@@ -409,7 +402,6 @@
                     currentScreen.value = 'level-setup';
                 };
 
-                // Tri croisé des questions selon l'exigence cumulée demandée
                 const selectLevel = (level) => {
                     selectedLevel.value = level;
                     const target = cleanText(level);
@@ -421,7 +413,7 @@
                         } else if (target === 'premiere') {
                             return currentQLevel === 'seconde' || currentQLevel === 'premiere';
                         } else if (target === 'terminale') {
-                            return true; // Accès total à l'ensemble
+                            return true; 
                         }
                         return true;
                     });
@@ -438,6 +430,7 @@
                     const tree = {};
                     filteredQuestions.value.forEach(q => {
                         const m = q.Module || "Général";
+                        // Extraction tolérante pour la colonne sous-module
                         const sm = q["Sous module"] || q["Sousmodule"] || q["Sous-module"] || "Tronc Commun";
                         if (!tree[m]) tree[m] = {};
                         if (!tree[m][sm]) tree[m][sm] = [];
@@ -568,7 +561,7 @@
                 };
 
                 const fetchGradeMention = () => {
-                    if (isCheated.value) return "SESSION INVALIDÉE — INFRACTION";
+                    if (isCheated.value) return "SESSION INVALIDÉE — INFRACTION PROTOCOLE";
                     if (isInterrupted.value) return "SESSION INCOMPLÈTE — ABANDON";
                     const ratio = finalScore.value / (quizQuestions.value.length || 1);
                     if (ratio >= 0.85) return "MAÎTRISE PARFAITE — POSTURE EXCELLENTE";
